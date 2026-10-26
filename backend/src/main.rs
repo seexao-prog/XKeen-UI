@@ -3,14 +3,17 @@ mod auth;
 mod backuper;
 mod configs;
 mod controller;
+mod devices;
 mod dns;
 mod frontend_embedder;
 mod geo;
 mod logger;
 mod healthchecker;
+mod perf;
 mod provider_inspector;
 mod route_test;
 mod settings;
+mod speedtest;
 mod system;
 mod types;
 mod updater;
@@ -506,6 +509,10 @@ async fn main() {
         )
         .route("/api/healthcheck/all", post(healthchecker::post_healthcheck_all))
         .route("/api/device-list", get(api_relay::get_device_list))
+        .route("/api/devices", get(devices::get_devices))
+        .route("/api/devices/proxy", post(devices::post_device_proxy))
+        .route("/api/perf", get(perf::get_perf))
+        .route("/api/speedtest", post(speedtest::post_speedtest))
         .route("/api/update", post(updater::post_update))
         .route("/api/geo", get(geo::get_geo))
         .route("/api/geo/site", get(geo::get_geosite))

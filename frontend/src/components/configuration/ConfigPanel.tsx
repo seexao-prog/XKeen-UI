@@ -17,12 +17,15 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   IconBox,
+  IconActivity,
+  IconBolt,
   IconBoltFilled,
   IconCheck,
   IconChevronDown,
   IconChevronUp,
   IconCode,
   IconDeviceFloppy,
+  IconDevices,
   IconDotsFilled,
   IconExternalLinkFilled,
   IconEye,
@@ -30,6 +33,7 @@ import {
   IconFilePlus,
   IconFileText,
   IconFileUpload,
+  IconGauge,
   IconLink,
   IconListDetails,
   IconPencil,
@@ -104,6 +108,7 @@ interface Props {
   onOpenGeoScan: () => void
   onOpenRouteTest: () => void
   onOpenBackups: () => void
+  onOpenPerfTool: (modal: 'showDevicesModal' | 'showPerfModal' | 'showSpeedtestModal' | 'showAdvisorModal') => void
   onRefreshConfigs: () => Promise<Config[]>
   editorRef: React.RefObject<CodeMirrorRef | null>
   configActionsRef: React.RefObject<{ switchTab: (index: number) => void; getActiveIndex: () => number }>
@@ -301,6 +306,7 @@ export function ConfigPanel({
   onOpenGeoScan,
   onOpenRouteTest,
   onOpenBackups,
+  onOpenPerfTool,
   onRefreshConfigs,
   editorRef,
   configActionsRef,
@@ -1250,6 +1256,24 @@ export function ConfigPanel({
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={onOpenRouteTest}>
                             <IconRoute /> Проверка маршрута
+                          </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuGroup>
+                          <DropdownMenuLabel>Скорость</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => onOpenPerfTool('showDevicesModal')}>
+                            <IconDevices /> Устройства и прокси
+                          </DropdownMenuItem>
+                          {!isCoreMihomo && (
+                            <DropdownMenuItem onClick={() => onOpenPerfTool('showAdvisorModal')}>
+                              <IconGauge /> Анализ конфига
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem onClick={() => onOpenPerfTool('showPerfModal')}>
+                            <IconActivity /> Нагрузка
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onOpenPerfTool('showSpeedtestModal')}>
+                            <IconBolt /> Спидтест
                           </DropdownMenuItem>
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />

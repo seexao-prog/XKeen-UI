@@ -49,14 +49,14 @@ const MIN_TIMEOUT_MS: u64 = 500;
 const MAX_TIMEOUT_MS: u64 = 30_000;
 
 /// Лимит на запуск xray и готовность inbound — в таймаут пинга не входит.
-const STARTUP_TIMEOUT: Duration = Duration::from_secs(10);
+pub(crate) const STARTUP_TIMEOUT: Duration = Duration::from_secs(10);
 
 /// Сколько замеров «теста всех» идут одновременно: на слабом ARM-железе лавина TLS-рукопожатий
 /// завышает задержки.
 const PING_CONCURRENCY: usize = 8;
 
 /// Убирает сервер выдачи конфига и при отмене запроса (клиент оборвал соединение).
-struct AbortOnDrop(tokio::task::JoinHandle<()>);
+pub(crate) struct AbortOnDrop(pub(crate) tokio::task::JoinHandle<()>);
 
 impl Drop for AbortOnDrop {
     fn drop(&mut self) {
@@ -460,7 +460,7 @@ async fn run_ping(
 }
 
 /// Запуск xray с конфигом из `config_socket`: процесс, канал готовности и задача сбора вывода.
-async fn start_xray(config_socket: &str) -> Result<(Child, oneshot::Receiver<()>, tokio::task::JoinHandle<Vec<u8>>), String> {
+pub(crate) async fn start_xray(config_socket: &str) -> Result<(Child, oneshot::Receiver<()>, tokio::task::JoinHandle<Vec<u8>>), String> {
     let mut cmd = Command::new("xray");
     // `-format json` обязателен: автоопределение формата (`core::GetFormat`) смотрит на
     // расширение аргумента, а у абстрактного сокета его нет (`Failed to get format of @…`).
@@ -511,7 +511,8 @@ async fn collect_output(stdout: Option<ChildStdout>, stderr: Option<ChildStderr>
 
 /// Ждёт готовности ядра. Ранний выход xray — ошибка с последней строкой вывода, отсутствие
 /// сигнала до `startup_deadline` — таймаут запуска.
-async fn wait_xray_ready(
+pub(crate) async fn wait_xray_ready(
+
     child: &mut Child,
     startup_deadline: Instant,
     ready: oneshot::Receiver<()>,
@@ -545,7 +546,7 @@ async fn wait_xray_ready(
 }
 
 /// TLS-конфиг с публичными корневыми сертификатами (как у reqwest: rustls) — строится один раз.
-static TLS_CONFIG: LazyLock<Arc<rustls::ClientConfig>> = LazyLock::new(|| {
+pub(crate) static TLS_CONFIG: LazyLock<Arc<rustls::ClientConfig>> = LazyLock::new(|| {
     let mut roots = rustls::RootCertStore::empty();
     roots.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
     Arc::new(
@@ -663,7 +664,7 @@ async fn write_all<S: AsyncWrite + Unpin>(s: &mut S, buf: &str) -> Result<(), St
 }
 
 /// Читает начало HTTP-ответа до конца заголовков (`\r\n\r\n`).
-async fn read_headers<R: AsyncRead + Unpin>(reader: &mut R) -> Result<Vec<u8>, String> {
+pub(crate) async fn read_headers<R: AsyncRead + Unpin>(reader: &mut R) -> Result<Vec<u8>, String> {
     let mut buffer = Vec::with_capacity(1024);
     loop {
         let read = reader
@@ -683,7 +684,7 @@ async fn read_headers<R: AsyncRead + Unpin>(reader: &mut R) -> Result<Vec<u8>, S
 }
 
 /// Статус из первой строки HTTP-ответа (`HTTP/1.1 204 No Content` → 204).
-fn parse_status(headers: &[u8]) -> Result<u16, String> {
+pub(crate) fn parse_status(headers: &[u8]) -> Result<u16, String> {
     let first_line = headers.split(|b| *b == b'\n').next().unwrap_or_default();
     let text = String::from_utf8_lossy(first_line);
     text.split_whitespace()
