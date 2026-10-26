@@ -397,6 +397,27 @@ async fn validate_core(files: &[ConfigReq]) -> Result<(), String> {
     Err(combined)
 }
 
+/// Проверка всего набора конфигов Xray из `XRAY_CONF_DIR`, где `file` заменён (или добавлен)
+/// содержимым `content`, а при `None` — исключён из набора. Та же логика, что у
+/// `put_config?validate=xray` (используют подписки).
+pub(crate) async fn validate_xray_with(file: &str, content: Option<&str>) -> Result<(), String> {
+    let mut files = Vec::new();
+    if let Ok(mut entries) = tokio::fs::read_dir(XRAY_CONF_DIR).await {
+        while let Ok(Some(entry)) = entries.next_entry().await {
+            let path = entry.path();
+            let path_str = path.to_string_lossy().into_owned();
+            if path.extension().is_some_and(|e| e == "json") && path_str != file {
+                let body = tokio::fs::read_to_string(&path).await.unwrap_or_default();
+                files.push(ConfigReq { file: path_str, content: body });
+            }
+        }
+    }
+    if let Some(content) = content {
+        files.push(ConfigReq { file: file.to_string(), content: content.to_string() });
+    }
+    validate_core(&files).await
+}
+
 /// Отдаёт слушатель на свободном абстрактном адресе, производном от имени файла:
 /// в обычном случае это сам basename (в strace/ps видно, какой конфиг валидируется).
 /// Абстрактное пространство имён глобально в системе, поэтому на конфликт — файл с тем

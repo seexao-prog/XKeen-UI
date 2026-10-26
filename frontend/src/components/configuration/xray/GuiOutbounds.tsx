@@ -14,6 +14,7 @@ import { cn, copyText } from '../../../lib/utils'
 import { parse as parseJsonc } from 'jsonc-parser'
 import type { CodeMirrorRef } from '../CodeMirror'
 import { ProviderEditor } from '../editor/ProviderEditor'
+import { UptimeBar } from '../../automation/UptimeBar'
 
 type Outbound = Record<string, any>
 
@@ -724,6 +725,7 @@ const OutboundCard = memo(function OutboundCard({
         {meta.alpn && <MetaChip className="bg-yellow-400/15 text-yellow-400">{`ALPN: ${meta.alpn.join(', ')}`}</MetaChip>}
         {meta.congestion && <MetaChip className="bg-pink-400/15 text-pink-400">{meta.congestion.toUpperCase()}</MetaChip>}
       </div>
+      {tag && <UptimeBar tag={tag} />}
     </div>
   )
 })

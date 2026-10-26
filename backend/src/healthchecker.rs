@@ -214,6 +214,31 @@ pub async fn post_healthcheck_all(State(state): State<AppState>, Json(request): 
     Json(serde_json::json!({ "success": true, "results": reply }))
 }
 
+/// «Тест всех» для фонового мониторинга аптайма (`uptime.rs`): те же параметры и `PING_LOCK`,
+/// что и у кнопки в UI, результаты также попадают в историю замеров. `Ok(delay|Err)` по тегу;
+/// `Err` — xray не запустился (замера не было).
+pub(crate) async fn ping_all_background(
+    state: &AppState, outbounds: &[serde_json::Value],
+) -> Result<Vec<(String, Result<u64, String>)>, String> {
+    let params = resolve_ping_params(state, None, None)?;
+    let _guard = PING_LOCK.lock().await;
+    let results = ping_all(outbounds, params).await?;
+    let mut out = Vec::with_capacity(results.len());
+    for (tag, result) in results {
+        match result {
+            Ok(reply) => {
+                record_ping_history(&tag, reply.latency_ms, None).await;
+                out.push((tag, Ok(reply.latency_ms)));
+            }
+            Err(error) => {
+                record_ping_history(&tag, 0, Some(error.clone())).await;
+                out.push((tag, Err(error)));
+            }
+        }
+    }
+    Ok(out)
+}
+
 /// Ошибка запуска xray: полный текст — в лог. До фронта доходит только ошибка про сокет,
 /// остальные случаи он показывает общим сообщением.
 fn startup_failure(error: String) -> Json<serde_json::Value> {
