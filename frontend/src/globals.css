@@ -1,83 +1,85 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
-/* inter-cyrillic-ext-wght-normal */
+
+/* ─── Geist (Vercel) ─── */
+/* geist-cyrillic-ext-wght-normal */
 @font-face {
-  font-family: 'Inter Variable';
+  font-family: 'Geist Variable';
   font-style: normal;
   font-display: swap;
   font-weight: 100 900;
-  src: url('../node_modules/@fontsource-variable/inter/files/inter-cyrillic-ext-wght-normal.woff2') format('woff2-variations');
+  src: url('../node_modules/@fontsource-variable/geist/files/geist-cyrillic-ext-wght-normal.woff2') format('woff2-variations');
   unicode-range: U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F;
 }
 
-/* inter-cyrillic-wght-normal */
+/* geist-cyrillic-wght-normal */
 @font-face {
-  font-family: 'Inter Variable';
+  font-family: 'Geist Variable';
   font-style: normal;
   font-display: swap;
   font-weight: 100 900;
-  src: url('../node_modules/@fontsource-variable/inter/files/inter-cyrillic-wght-normal.woff2') format('woff2-variations');
+  src: url('../node_modules/@fontsource-variable/geist/files/geist-cyrillic-wght-normal.woff2') format('woff2-variations');
   unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116;
 }
 
-/* inter-latin-ext-wght-normal */
+/* geist-latin-ext-wght-normal */
 @font-face {
-  font-family: 'Inter Variable';
+  font-family: 'Geist Variable';
   font-style: normal;
   font-display: swap;
   font-weight: 100 900;
-  src: url('../node_modules/@fontsource-variable/inter/files/inter-latin-ext-wght-normal.woff2') format('woff2-variations');
+  src: url('../node_modules/@fontsource-variable/geist/files/geist-latin-ext-wght-normal.woff2') format('woff2-variations');
   unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
 }
 
-/* inter-latin-wght-normal */
+/* geist-latin-wght-normal */
 @font-face {
-  font-family: 'Inter Variable';
+  font-family: 'Geist Variable';
   font-style: normal;
   font-display: swap;
   font-weight: 100 900;
-  src: url('../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2') format('woff2-variations');
+  src: url('../node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2') format('woff2-variations');
   unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
 }
 
-/* jetbrains-mono-cyrillic-ext-wght-normal */
+/* geist-mono-cyrillic-ext-wght-normal */
 @font-face {
-  font-family: 'JetBrains Mono Variable';
+  font-family: 'Geist Mono Variable';
   font-style: normal;
   font-display: swap;
-  font-weight: 100 800;
-  src: url('../node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-cyrillic-ext-wght-normal.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  src: url('../node_modules/@fontsource-variable/geist-mono/files/geist-mono-cyrillic-ext-wght-normal.woff2') format('woff2-variations');
   unicode-range: U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F;
 }
 
-/* jetbrains-mono-cyrillic-wght-normal */
+/* geist-mono-cyrillic-wght-normal */
 @font-face {
-  font-family: 'JetBrains Mono Variable';
+  font-family: 'Geist Mono Variable';
   font-style: normal;
   font-display: swap;
-  font-weight: 100 800;
-  src: url('../node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-cyrillic-wght-normal.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  src: url('../node_modules/@fontsource-variable/geist-mono/files/geist-mono-cyrillic-wght-normal.woff2') format('woff2-variations');
   unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116;
 }
 
-/* jetbrains-mono-latin-ext-wght-normal */
+/* geist-mono-latin-ext-wght-normal */
 @font-face {
-  font-family: 'JetBrains Mono Variable';
+  font-family: 'Geist Mono Variable';
   font-style: normal;
   font-display: swap;
-  font-weight: 100 800;
-  src: url('../node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-ext-wght-normal.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  src: url('../node_modules/@fontsource-variable/geist-mono/files/geist-mono-latin-ext-wght-normal.woff2') format('woff2-variations');
   unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
 }
 
-/* jetbrains-mono-latin-wght-normal */
+/* geist-mono-latin-wght-normal */
 @font-face {
-  font-family: 'JetBrains Mono Variable';
+  font-family: 'Geist Mono Variable';
   font-style: normal;
   font-display: swap;
-  font-weight: 100 800;
-  src: url('../node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  src: url('../node_modules/@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2') format('woff2-variations');
   unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
 }
 
@@ -89,146 +91,155 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Vercel / Geist palette.
+ * Light: #fafafa page, white surfaces, #eaeaea borders, near-black primary.
+ * Dark (AMOLED): pure #000 page, #0a0a0a surfaces, hairline borders, near-white primary.
+ */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.13 0.028 261.692);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.13 0.028 261.692);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.13 0.028 261.692);
-  --primary: oklch(0.488 0.243 264.376);
-  --primary-foreground: oklch(0.97 0.014 254.604);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: #f1f5f9;
-  --muted-foreground: oklch(0.551 0.027 264.364);
-  --accent: oklch(0.967 0.003 264.542);
-  --accent-foreground: oklch(0.21 0.034 264.665);
-  --menu-active-bg: rgba(59, 130, 246, 0.15);
-  --menu-destructive-active-bg: rgba(239, 68, 68, 0.2);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.928 0.006 264.531);
-  --input: oklch(0.928 0.006 264.531);
-  --ring: oklch(0.707 0.022 261.325);
-  --chart-1: oklch(0.7137 0.1434 254.62);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0.002 247.839);
-  --sidebar-foreground: oklch(0.13 0.028 261.692);
-  --sidebar-primary: oklch(0.546 0.245 262.881);
-  --sidebar-primary-foreground: oklch(0.97 0.014 254.604);
-  --sidebar-accent: oklch(0.488 0.243 264.376);
-  --sidebar-accent-foreground: oklch(0.97 0.014 254.604);
-  --sidebar-border: oklch(0.928 0.006 264.531);
-  --sidebar-ring: oklch(0.707 0.022 261.325);
-  --input-background: oklch(1 0 0);
-  --input-background-hover: oklch(0.967 0.003 264.542);
-  --status-badge-bg: #f8fafc;
-  --status-badge-color: #475569;
-  --status-badge-border: #cbd5e1;
-  --status-badge-stopped-bg: #fef2f2;
-  --status-badge-stopped-color: #dc2626;
-  --status-badge-stopped-border: #fecaca;
-  --status-running-bg: #ecfdf5;
-  --status-running-color: #059669;
-  --status-running-border: #a7f3d0;
-  --status-pending-bg: #fffbeb;
-  --status-pending-color: #d97706;
-  --status-pending-border: #fde68a;
-  --status-running-glow:
-    0 0 6px 1px color-mix(in srgb, var(--status-running-color) 25%, transparent),
-    inset 0 0 6px 0px color-mix(in srgb, var(--status-running-color) 8%, transparent);
-  --status-pending-glow:
-    0 0 6px 1px color-mix(in srgb, var(--status-pending-color) 25%, transparent),
-    inset 0 0 6px 0px color-mix(in srgb, var(--status-pending-color) 8%, transparent);
-  --status-stopped-glow:
-    0 0 6px 1px color-mix(in srgb, var(--status-badge-stopped-color) 20%, transparent),
-    inset 0 0 6px 0px color-mix(in srgb, var(--status-badge-stopped-color) 6%, transparent);
-  --log-badge-debug-bg: #fff;
-  --log-badge-debug-color: #0f172a;
-  --log-badge-debug-border: #cbd5e1;
-  --log-badge-info-bg: #f1f5f9;
-  --log-badge-info-color: #0f172a;
-  --log-badge-warn-bg: #0f172a;
-  --log-badge-warn-color: #f8fafc;
-  --log-badge-error-bg: #ef4444;
-  --log-badge-error-color: #fff;
+  --page: #fafafa;
+  --background: #ffffff;
+  --foreground: #171717;
+  --card: #ffffff;
+  --card-foreground: #171717;
+  --popover: #ffffff;
+  --popover-foreground: #171717;
+  --primary: #171717;
+  --primary-foreground: #ffffff;
+  --secondary: #f2f2f2;
+  --secondary-foreground: #171717;
+  --muted: #f2f2f2;
+  --muted-foreground: #666666;
+  --accent: #ebebeb;
+  --accent-foreground: #171717;
+  --menu-active-bg: rgba(0, 0, 0, 0.05);
+  --menu-destructive-active-bg: rgba(229, 72, 77, 0.1);
+  --destructive: #d93036;
+  --border: #eaeaea;
+  --input: #e5e5e5;
+  --ring: #a1a1a1;
+  --focus-border: #8f8f8f;
+  --focus-ring: rgba(0, 0, 0, 0.08);
+  --vercel-blue: #0070f3;
+  --vercel-blue-text: #0068d6;
+  --chart-1: #52a8ff;
+  --chart-2: #0068d6;
+  --chart-3: #0070f3;
+  --chart-4: #7d00cc;
+  --chart-5: #171717;
+  --radius: 0.5rem;
+  --sidebar: #fafafa;
+  --sidebar-foreground: #171717;
+  --sidebar-primary: #171717;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f2f2f2;
+  --sidebar-accent-foreground: #171717;
+  --sidebar-border: #eaeaea;
+  --sidebar-ring: #a1a1a1;
+  --input-background: #ffffff;
+  --input-background-hover: #fafafa;
+  --scrollbar: #d4d4d4;
+  --status-badge-bg: #ffffff;
+  --status-badge-color: #666666;
+  --status-badge-border: #eaeaea;
+  --status-badge-stopped-bg: #ffffff;
+  --status-badge-stopped-color: #d93036;
+  --status-badge-stopped-border: #eaeaea;
+  --status-running-bg: #ffffff;
+  --status-running-color: #18794e;
+  --status-running-border: #eaeaea;
+  --status-pending-bg: #ffffff;
+  --status-pending-color: #a35200;
+  --status-pending-border: #eaeaea;
+  --status-running-glow: none;
+  --status-pending-glow: none;
+  --status-stopped-glow: none;
+  --log-badge-debug-bg: #ffffff;
+  --log-badge-debug-color: #171717;
+  --log-badge-debug-border: #eaeaea;
+  --log-badge-info-bg: #f2f2f2;
+  --log-badge-info-color: #171717;
+  --log-badge-warn-bg: #ffefcf;
+  --log-badge-warn-color: #a35200;
+  --log-badge-error-bg: #ffe5e5;
+  --log-badge-error-color: #cb2a2f;
 }
 
 .dark {
-  --background: oklch(0.13 0.028 261.692);
-  --foreground: oklch(0.985 0.002 247.839);
-  --card: oklch(0.2077 0.0398 265.75);
-  --card-foreground: oklch(0.985 0.002 247.839);
-  --popover: oklch(0.21 0.034 264.665);
-  --popover-foreground: oklch(0.985 0.002 247.839);
-  --primary: oklch(0.42 0.18 266);
-  --primary-foreground: oklch(0.97 0.014 254.604);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.278 0.033 256.848);
-  --muted-foreground: oklch(0.707 0.022 261.325);
-  --accent: rgba(59, 130, 246, 0.15);
-  --accent-foreground: oklch(0.985 0.002 247.839);
-  --menu-active-bg: rgba(59, 130, 246, 0.15);
-  --menu-destructive-active-bg: rgba(239, 68, 68, 0.2);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(0.2795 0.0368 260.03);
-  --input: oklch(0.2795 0.0368 260.03);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.21 0.034 264.665);
-  --sidebar-foreground: oklch(0.985 0.002 247.839);
-  --sidebar-primary: oklch(0.623 0.214 259.815);
-  --sidebar-primary-foreground: oklch(0.97 0.014 254.604);
-  --sidebar-accent: oklch(0.42 0.18 266);
-  --sidebar-accent-foreground: oklch(0.97 0.014 254.604);
-  --sidebar-border: oklch(0.551 0.027 264.364);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
-  --input-background: oklch(0.1666 0.0331 266.08);
-  --input-background-hover: oklch(0.2077 0.0398 265.75);
-  --status-badge-bg: #1e293b;
-  --status-badge-color: #94a3b8;
-  --status-badge-border: #334155;
-  --status-badge-stopped-bg: #2a1215;
-  --status-badge-stopped-color: #ef4444;
-  --status-badge-stopped-border: #4a1f24;
-  --status-running-bg: #19292c;
-  --status-running-color: #10b981;
-  --status-running-border: #19292c;
-  --status-pending-bg: #2a1f0d;
-  --status-pending-color: #f59e0b;
-  --status-pending-border: #2a1f0d;
-  --status-running-glow:
-    0 0 10px 2px color-mix(in srgb, var(--status-running-color) 40%, transparent),
-    inset 0 0 8px 0px color-mix(in srgb, var(--status-running-color) 14%, transparent);
-  --status-pending-glow:
-    0 0 10px 2px color-mix(in srgb, var(--status-pending-color) 40%, transparent),
-    inset 0 0 8px 0px color-mix(in srgb, var(--status-pending-color) 14%, transparent);
-  --status-stopped-glow:
-    0 0 10px 2px color-mix(in srgb, var(--status-badge-stopped-color) 35%, transparent),
-    inset 0 0 8px 0px color-mix(in srgb, var(--status-badge-stopped-color) 10%, transparent);
-  --log-badge-debug-bg: #080e1d;
-  --log-badge-debug-color: #fff;
-  --log-badge-debug-border: #1e293b;
-  --log-badge-info-bg: #1e293b;
-  --log-badge-info-color: #fff;
-  --log-badge-warn-bg: #f8fafc;
-  --log-badge-warn-color: #0f172a;
-  --log-badge-error-bg: #7f1d1d;
-  --log-badge-error-color: #fff;
+  --page: #000000;
+  --background: #000000;
+  --foreground: #ededed;
+  --card: #0a0a0a;
+  --card-foreground: #ededed;
+  --popover: #0a0a0a;
+  --popover-foreground: #ededed;
+  --primary: #ededed;
+  --primary-foreground: #0a0a0a;
+  --secondary: #1a1a1a;
+  --secondary-foreground: #ededed;
+  --muted: #1a1a1a;
+  --muted-foreground: #a1a1a1;
+  --accent: #1f1f1f;
+  --accent-foreground: #ededed;
+  --menu-active-bg: rgba(255, 255, 255, 0.08);
+  --menu-destructive-active-bg: rgba(255, 97, 102, 0.14);
+  --destructive: #ff6166;
+  --border: #242424;
+  --input: #2e2e2e;
+  --ring: #5a5a5a;
+  --focus-border: #8f8f8f;
+  --focus-ring: rgba(255, 255, 255, 0.12);
+  --vercel-blue: #0070f3;
+  --vercel-blue-text: #52a8ff;
+  --chart-1: #52a8ff;
+  --chart-2: #52a8ff;
+  --chart-3: #0070f3;
+  --chart-4: #bf7af0;
+  --chart-5: #ededed;
+  --sidebar: #0a0a0a;
+  --sidebar-foreground: #ededed;
+  --sidebar-primary: #ededed;
+  --sidebar-primary-foreground: #0a0a0a;
+  --sidebar-accent: #1a1a1a;
+  --sidebar-accent-foreground: #ededed;
+  --sidebar-border: #242424;
+  --sidebar-ring: #5a5a5a;
+  --input-background: #0a0a0a;
+  --input-background-hover: #1a1a1a;
+  --scrollbar: #333333;
+  --status-badge-bg: #0a0a0a;
+  --status-badge-color: #a1a1a1;
+  --status-badge-border: #242424;
+  --status-badge-stopped-bg: #0a0a0a;
+  --status-badge-stopped-color: #ff6166;
+  --status-badge-stopped-border: #242424;
+  --status-running-bg: #0a0a0a;
+  --status-running-color: #62c073;
+  --status-running-border: #242424;
+  --status-pending-bg: #0a0a0a;
+  --status-pending-color: #f5a524;
+  --status-pending-border: #242424;
+  --status-running-glow: none;
+  --status-pending-glow: none;
+  --status-stopped-glow: none;
+  --log-badge-debug-bg: #000000;
+  --log-badge-debug-color: #ededed;
+  --log-badge-debug-border: #2e2e2e;
+  --log-badge-info-bg: #1a1a1a;
+  --log-badge-info-color: #ededed;
+  --log-badge-warn-bg: #2a1a00;
+  --log-badge-warn-color: #f5a524;
+  --log-badge-error-bg: #3c1618;
+  --log-badge-error-color: #ff6166;
 }
 
 @theme inline {
-  --font-sans: 'Inter Variable', sans-serif, 'TwemojiMozilla';
-  --font-mono: ui-monospace, 'JetBrains Mono Variable', monospace, 'TwemojiMozilla';
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif, 'TwemojiMozilla';
+  --font-mono: 'Geist Mono Variable', ui-monospace, monospace, 'TwemojiMozilla';
+  /* Remap Tailwind blues used as accents across the app to Vercel blue */
+  --color-blue-400: var(--vercel-blue-text);
+  --color-blue-500: var(--vercel-blue);
+  --color-page: var(--page);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -265,7 +276,7 @@
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-xl: calc(var(--radius) * 1.5);
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
@@ -300,15 +311,21 @@
     @apply border-border;
   }
   body {
-    @apply bg-muted dark:bg-background text-foreground font-sans;
+    @apply bg-page text-foreground font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'liga' 1, 'calt' 1;
   }
   html {
     @apply font-sans;
-    scrollbar-color: #334155 transparent;
+    scrollbar-color: var(--scrollbar) transparent;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--vercel-blue) 30%, transparent);
   }
 }
 
-/* ─── Log badges (shadcn Badge style) ─── */
+/* ─── Log badges ─── */
 .log-line {
   display: block;
   white-space: pre-wrap;
@@ -319,6 +336,7 @@
   justify-content: center;
   width: 48px;
   font-size: 11px;
+  font-weight: 500;
   padding: 4px 0 3px 0;
   border-radius: 9999px;
   white-space: nowrap;
@@ -363,14 +381,14 @@
   color: var(--status-badge-color);
   padding: 0px 12px;
   height: 36px;
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px solid var(--status-badge-border);
   white-space: nowrap;
   transition:
-    background 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease;
   position: relative;
   overflow: hidden;
   user-select: none;
@@ -379,21 +397,21 @@
 .status-badge-running {
   background: var(--status-running-bg);
   color: var(--status-running-color);
-  border-color: color-mix(in srgb, var(--status-running-color) 50%, transparent);
+  border-color: var(--status-running-border);
   box-shadow: var(--status-running-glow);
 }
 
 .status-badge-pending {
   background: var(--status-pending-bg);
   color: var(--status-pending-color);
-  border-color: color-mix(in srgb, var(--status-pending-color) 50%, transparent);
+  border-color: var(--status-pending-border);
   box-shadow: var(--status-pending-glow);
 }
 
 .status-badge-stopped {
   background: var(--status-badge-stopped-bg);
   color: var(--status-badge-stopped-color);
-  border-color: color-mix(in srgb, var(--status-badge-stopped-color) 50%, transparent);
+  border-color: var(--status-badge-stopped-border);
   box-shadow: var(--status-stopped-glow);
 }
 
@@ -427,8 +445,8 @@
   inset: 0;
   color: transparent;
   text-shadow:
-    0 0 6px rgba(48, 163, 184, 0.25),
-    0 0 16px rgba(48, 163, 184, 0.2);
+    0 0 6px rgba(255, 255, 255, 0.15),
+    0 0 16px rgba(255, 255, 255, 0.1);
   opacity: 0.35;
   animation: dark-glow 2.4s ease-in-out infinite;
   pointer-events: none;

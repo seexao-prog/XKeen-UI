@@ -295,7 +295,7 @@ export function GuiRouting({ editorRef, configs, activeConfigIndex }: Props) {
             50
           )
         }}
-        className="text-muted-foreground border-ring/60 hover:border-chart-2 mt-1 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border-2 border-dashed px-3 py-2.5 text-sm font-medium transition-colors hover:border-solid hover:text-[#60a5fa]"
+        className="text-muted-foreground border-ring/60 hover:border-chart-2 mt-1 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border-2 border-dashed px-3 py-2.5 text-sm font-medium transition-colors hover:border-solid hover:text-foreground"
       >
         <IconPlus size={17} /> Добавить правило
       </button>
@@ -421,7 +421,7 @@ const RuleCard = memo(
         ref={ref}
         className={cn(
           'bg-input-background flex flex-col gap-2 rounded-xl border p-3 transition-all duration-150 select-none',
-          isDragging ? 'scale-[0.99] border-[#60a5fa] opacity-80' : 'border-border'
+          isDragging ? 'scale-[0.99] border-(--focus-border) opacity-80' : 'border-border'
         )}
       >
         {/* Header */}

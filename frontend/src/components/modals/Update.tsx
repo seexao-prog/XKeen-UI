@@ -281,8 +281,8 @@ export function UpdateModal({ onInstalled }: { onInstalled: () => void }) {
                       className={cn(
                         'rounded-lg border transition-all',
                         checked
-                          ? 'border-[#60a5fa] bg-linear-to-b from-blue-500/25 to-blue-500/15'
-                          : 'border-ring/40 bg-[linear-gradient(135deg,rgba(59,130,246,0.05)_0%,transparent_50%)] hover:border-[#60a5fa] hover:bg-linear-to-b hover:from-blue-500/15 hover:to-blue-500/5'
+                          ? 'border-foreground bg-accent/60'
+                          : 'border-border hover:border-(--focus-border) hover:bg-accent/40'
                       )}
                     >
                       <AccordionTrigger
@@ -339,8 +339,8 @@ export function UpdateModal({ onInstalled }: { onInstalled: () => void }) {
                       className={cn(
                         'flex cursor-pointer items-start justify-between gap-3 rounded-lg border px-3 py-2.5 transition-all',
                         checked
-                          ? 'border-[#60a5fa] bg-linear-to-b from-blue-500/25 to-blue-500/15'
-                          : 'border-ring/40 bg-[linear-gradient(135deg,rgba(59,130,246,0.05)_0%,transparent_50%)] from-blue-500/15 to-blue-500/5 hover:border-[#60a5fa] hover:bg-linear-to-b'
+                          ? 'border-foreground bg-accent/60'
+                          : 'border-border hover:border-(--focus-border) hover:bg-accent/40'
                       )}
                     >
                       <span className="truncate text-sm font-medium">{release.name || release.version}</span>

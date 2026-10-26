@@ -177,7 +177,7 @@ function ConfigTab({ config, currentCore, showToast, onRefreshConfigs, withConte
   const isProtected = config.file.endsWith('/config.yaml') || config.file === 'config.yaml'
 
   const tabsTrigger = (
-    <TabsTrigger value={config.file} className="dark:data-[state=active]:bg-input-background! relative data-[state=active]:bg-white!">
+    <TabsTrigger value={config.file} className="dark:data-[state=active]:bg-input-background! relative data-[state=active]:bg-background!">
       {config.file
         .split('/')
         .pop()
@@ -922,7 +922,7 @@ export function ConfigPanel({
                         size="icon"
                         aria-label={showHiddenSelectors ? 'Скрыть скрытые селекторы' : 'Показывать скрытые селекторы'}
                         aria-pressed={showHiddenSelectors}
-                        className={cn(showHiddenSelectors && 'border-[#60a5fa] text-blue-400')}
+                        className={cn(showHiddenSelectors && 'border-(--focus-border) text-blue-400')}
                         onClick={() => {
                           setShowHiddenSelectors((prev) => {
                             try {

@@ -39,7 +39,7 @@ function DialogOverlay({ className, ...props }: React.ComponentProps<typeof Dial
       data-slot="dialog-overlay"
       className={cn(
         'data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 fixed inset-0 isolate z-40',
-        'bg-[#020817]/80 duration-200',
+        'bg-black/40 dark:bg-black/80 supports-backdrop-filter:backdrop-blur-[2px] duration-200',
         className
       )}
       {...props}
@@ -72,7 +72,7 @@ function DialogContent({
       >
         {children}
         {showCloseButton && (
-          <DialogPrimitive.Close data-slot="dialog-close" render={<Button variant="ghost" className="text-ring hover:bg-muted! absolute top-4 right-4 transition-colors hover:text-white" size="icon" />}>
+          <DialogPrimitive.Close data-slot="dialog-close" render={<Button variant="ghost" className="text-ring hover:bg-muted! absolute top-4 right-4 transition-colors hover:text-foreground" size="icon" />}>
             <IconX className="size-6" />
             <span className="sr-only">Close</span>
           </DialogPrimitive.Close>

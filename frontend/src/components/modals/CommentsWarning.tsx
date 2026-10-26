@@ -22,7 +22,7 @@ export function CommentsWarningModal() {
 
   return (
     <Dialog open={modals.showCommentsWarningModal} onOpenChange={(open) => !open && close()}>
-      <DialogContent className="max-w-sm bg-[#0F1629]">
+      <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 pb-3">
             <IconAlertTriangle size={23} className="text-amber-400" />

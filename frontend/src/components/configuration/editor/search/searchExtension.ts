@@ -244,9 +244,9 @@ export function searchThemeSpec(isDarkTheme: boolean): ThemeSpec {
       border: 'none',
     },
     '.cm-panels.cm-panels-bottom': {
-      backgroundColor: isDarkTheme ? '#0f172a' : '#f8fafc',
-      color: isDarkTheme ? '#c0caf5' : '#0f172a',
-      borderTop: `1px solid ${isDarkTheme ? '#334155' : '#cbd5e1'}`,
+      backgroundColor: isDarkTheme ? '#0a0a0a' : '#fafafa',
+      color: isDarkTheme ? '#ededed' : '#171717',
+      borderTop: `1px solid ${isDarkTheme ? '#242424' : '#eaeaea'}`,
       zIndex: '1',
     },
     '.cm-panels.cm-panels-top': {

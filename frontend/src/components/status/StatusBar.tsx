@@ -220,7 +220,7 @@ export function StatusBar({
         <div className="border-border bg-card relative z-40 flex shrink-0 flex-col justify-between gap-2 rounded-xl border px-3 py-3 sm:px-4 md:flex-row md:items-center">
           {/* Статус */}
           <div className="order-2 flex w-full items-center justify-center md:order-1 md:w-auto md:justify-start">
-            <div className="bg-muted/40 flex items-center gap-2 rounded-lg border px-3 py-1.5">
+            <div className="bg-background flex items-center gap-2 rounded-lg border px-3 py-1.5">
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.75 pb-0.5">
                   <div className="relative size-2.5 shrink-0">
@@ -335,7 +335,7 @@ export function StatusBar({
               rel="noreferrer"
               className="rounded-md transition-opacity hover:opacity-85"
             >
-              <span className="bg-linear-to-r from-[#00D3F2] via-[#2B7FFF] to-[#155DFC] bg-clip-text text-[28px] font-semibold text-transparent">
+              <span className="text-foreground text-[24px] font-semibold tracking-[-0.04em]">
                 XKeen UI
               </span>
             </a>
@@ -379,10 +379,10 @@ export function StatusBar({
                       disabled={isPending}
                       className={cn(
                         'relative overflow-hidden text-xs tracking-wider',
-                        isOutdatedUI ? 'border-none! text-cyan-300 hover:text-cyan-300' : ''
+                        isOutdatedUI ? 'border-none! text-blue-400 hover:text-blue-400' : ''
                       )}
                     >
-                      {isOutdatedUI && <ShineBorder duration={7} borderWidth={2} shineColor={['#00D3F2', '#2B7FFF', '#155DFC']} />}
+                      {isOutdatedUI && <ShineBorder duration={7} borderWidth={2} shineColor={['#0070f3', '#7928ca', '#ff0080']} />}
                       <IconBox data-icon="inline-start" className="size-4.5" />
                       {version}
                     </Button>

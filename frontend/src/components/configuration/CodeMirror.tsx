@@ -156,7 +156,7 @@ export const CodeMirrorEditor = forwardRef<CodeMirrorRef, Props>(({ onContentCha
       ]),
       Prec.highest(syntaxHighlighting(editorHighlight)),
       languageCompartmentRef.current.of(getLanguageExtension(languageRef.current)),
-      indentationMarkers({ thickness: 2, colors: { activeDark: '#57a8d4', activeLight: '#3b82f6' } }),
+      indentationMarkers({ thickness: 2, colors: { activeDark: '#454545', activeLight: '#c9c9c9' } }),
       themeCompartmentRef.current.of(editorTheme(isMobileRef.current, darkTheme)),
       EditorView.contentAttributes.of({
         spellcheck: 'false',

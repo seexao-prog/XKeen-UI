@@ -95,7 +95,7 @@ function ContextMenuItem({
       onClick={onSelect}
       label={textValue}
       className={cn(
-        "group/context-menu-item data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:text-destructive relative flex items-center gap-2 rounded-sm px-2 py-1.25 text-sm outline-hidden select-none focus:bg-(--menu-active-bg) not-data-[variant=destructive]:focus:font-semibold not-data-[variant=destructive]:focus:text-[#60a5fa] not-data-[variant=destructive]:focus:**:text-[#60a5fa] data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-(--menu-active-bg) data-inset:pl-8 data-[variant=destructive]:focus:bg-(--menu-destructive-active-bg) [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "group/context-menu-item data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:text-destructive relative flex items-center gap-2 rounded-sm px-2 py-1.25 text-sm outline-hidden select-none focus:bg-(--menu-active-bg) not-data-[variant=destructive]:focus:font-semibold not-data-[variant=destructive]:focus:text-foreground not-data-[variant=destructive]:focus:**:text-foreground data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-(--menu-active-bg) data-inset:pl-8 data-[variant=destructive]:focus:bg-(--menu-destructive-active-bg) [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}

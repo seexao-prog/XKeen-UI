@@ -304,12 +304,12 @@ const ProxyCard = memo(function ProxyCard({
         'flex flex-col gap-2.5 rounded-md border px-3 py-2.5 text-sm transition-all',
         selectionDisabled ? 'cursor-not-allowed opacity-55' : 'cursor-pointer',
         isFixed
-          ? 'border-purple-400 bg-linear-to-b from-purple-500/25 to-purple-500/15'
+          ? 'border-purple-400 bg-purple-500/10'
           : isActive
-            ? 'border-[#60a5fa] bg-linear-to-b from-blue-500/25 to-blue-500/15'
+            ? 'border-foreground bg-accent/60'
             : selectionDisabled
-              ? 'border-ring/35 bg-[linear-gradient(135deg,rgba(148,163,184,0.08)_0%,transparent_55%)]'
-              : 'border-ring/40 bg-[linear-gradient(135deg,rgba(59,130,246,0.05)_0%,transparent_50%)] hover:border-[#60a5fa] hover:bg-linear-to-b hover:from-blue-500/15 hover:to-blue-500/5'
+              ? 'border-border'
+              : 'border-border hover:border-(--focus-border) hover:bg-accent/40'
       )}
       onClick={() => !selectionDisabled && onSelect(selectorName, proxyName)}
       onContextMenu={(e) => {

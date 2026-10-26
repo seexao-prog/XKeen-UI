@@ -551,7 +551,7 @@ const OutboundCard = memo(function OutboundCard({
     <div
       className={cn(
         'bg-input-background flex flex-col gap-3 rounded-xl border p-3 transition-all duration-150 select-none',
-        isDragging ? 'scale-[0.99] border-[#60a5fa] opacity-80' : 'border-border'
+        isDragging ? 'scale-[0.99] border-(--focus-border) opacity-80' : 'border-border'
       )}
     >
       {/* Header */}

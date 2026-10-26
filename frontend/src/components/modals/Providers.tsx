@@ -76,7 +76,7 @@ const BADGE_TONES = {
   green: 'bg-green-500/10! text-green-400!',
   emerald: 'bg-emerald-500/10! text-emerald-400!',
   orange: 'bg-orange-500/10! text-orange-400!',
-  muted: 'bg-white/5! text-white/40!',
+  muted: 'bg-foreground/5! text-foreground/40!',
 }
 const VEHICLE_TONES: Record<string, keyof typeof BADGE_TONES> = { HTTP: 'green', FILE: 'orange' }
 

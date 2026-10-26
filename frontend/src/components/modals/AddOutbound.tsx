@@ -137,7 +137,7 @@ function FlagPicker({ value, onAdd }: { value: string; onAdd: (next: string) => 
             type="button"
             variant="ghost"
             size="icon-xs"
-            className="text-muted-foreground hover:text-foreground size-6 hover:border-[#60a5fa] hover:bg-blue-500/15! active:translate-y-0"
+            className="text-muted-foreground hover:text-foreground size-6 hover:border-(--focus-border) hover:bg-accent! active:translate-y-0"
             aria-label="Добавить флаги"
           >
             <IconFlag className="size-4" />
@@ -168,8 +168,8 @@ function FlagPicker({ value, onAdd }: { value: string; onAdd: (next: string) => 
               className={cn(
                 'flex size-8 items-center justify-center rounded-md border border-transparent text-base transition-colors active:translate-y-0',
                 selected.includes(emoji)
-                  ? 'border-[#60a5fa] bg-blue-500/25'
-                  : 'hover:border-[#60a5fa] hover:bg-blue-500/15'
+                  ? 'border-foreground bg-accent/60'
+                  : 'hover:border-(--focus-border) hover:bg-accent/40'
               )}
             >
               {emoji}
@@ -218,19 +218,19 @@ function highlightYaml(code: string): string {
     .replace(/>/g, '&gt;')
     .split('\n')
     .map((line) => {
-      if (/^\s*#/.test(line)) return `<span style="color:#565f89">${line}</span>`
+      if (/^\s*#/.test(line)) return `<span style="color:#707070">${line}</span>`
 
       const kvMatch = line.match(/^(\s*)(-\s)?([a-zA-Z_][\w.-]*)(\s*:)(.*)?$/)
       if (kvMatch) {
         const [, indent, dash = '', key, colon, rest = ''] = kvMatch
-        const marker = dash ? `<span style="color:#89ddff">${dash}</span>` : ''
-        return `${indent}${marker}<span style="color:#7aa2f7">${key}</span>${colon}${highlightYamlValue(rest)}`
+        const marker = dash ? `<span style="color:#a1a1a1">${dash}</span>` : ''
+        return `${indent}${marker}<span style="color:#52a8ff">${key}</span>${colon}${highlightYamlValue(rest)}`
       }
 
       const listMatch = line.match(/^(\s*-\s)(.*)$/)
       if (listMatch) {
         const [, marker, rest] = listMatch
-        return `<span style="color:#89ddff">${marker}</span>${highlightYamlValue(rest)}`
+        return `<span style="color:#a1a1a1">${marker}</span>${highlightYamlValue(rest)}`
       }
 
       return line
@@ -245,15 +245,15 @@ function highlightYamlValue(value: string): string {
   if (commentIdx !== -1) {
     const main = value.slice(0, commentIdx)
     const comment = value.slice(commentIdx)
-    return highlightYamlValue(main) + `<span style="color:#565f89">${comment}</span>`
+    return highlightYamlValue(main) + `<span style="color:#707070">${comment}</span>`
   }
 
-  if (/^-?\d+\.?\d*$/.test(trimmed)) return value.replace(trimmed, `<span style="color:#ff9e64">${trimmed}</span>`)
-  if (/^(true|false|null|~)$/.test(trimmed)) return value.replace(trimmed, `<span style="color:#bb9af7">${trimmed}</span>`)
-  if (/^["']/.test(trimmed)) return value.replace(trimmed, `<span style="color:#9ece6a">${trimmed}</span>`)
+  if (/^-?\d+\.?\d*$/.test(trimmed)) return value.replace(trimmed, `<span style="color:#f5a524">${trimmed}</span>`)
+  if (/^(true|false|null|~)$/.test(trimmed)) return value.replace(trimmed, `<span style="color:#bf7af0">${trimmed}</span>`)
+  if (/^["']/.test(trimmed)) return value.replace(trimmed, `<span style="color:#62c073">${trimmed}</span>`)
   if (trimmed.startsWith('[') || trimmed.startsWith('{')) return highlightInlineYaml(value)
   if (trimmed && !trimmed.startsWith('{') && !trimmed.startsWith('[') && !trimmed.startsWith('*') && !trimmed.startsWith('&'))
-    return value.replace(trimmed, `<span style="color:#9ece6a">${trimmed}</span>`)
+    return value.replace(trimmed, `<span style="color:#62c073">${trimmed}</span>`)
 
   return value
 }
@@ -267,10 +267,10 @@ function highlightInlineYaml(value: string): string {
       const quote = char
       let end = i + 1
       while (end < value.length && value[end] !== quote) end++
-      result += `<span style="color:#9ece6a">${value.slice(i, Math.min(end + 1, value.length))}</span>`
+      result += `<span style="color:#62c073">${value.slice(i, Math.min(end + 1, value.length))}</span>`
       i = end + 1
     } else {
-      result += /[[\]{}]/.test(char) ? `<span style="color:#89ddff">${char}</span>` : char
+      result += /[[\]{}]/.test(char) ? `<span style="color:#a1a1a1">${char}</span>` : char
       i++
     }
   }
@@ -282,11 +282,11 @@ function highlightJson(code: string): string {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/([[\]{}])/g, '<span style="color:#89ddff">$1</span>')
-    .replace(/"([^"]+)"(\s*:)/g, '<span style="color:#7aa2f7">"$1"</span>$2')
-    .replace(/:\s*"([^"]*)"/g, ': <span style="color:#9ece6a">"$1"</span>')
-    .replace(/:\s*(\d+\.?\d*)/g, ': <span style="color:#ff9e64">$1</span>')
-    .replace(/:\s*(true|false|null)/g, ': <span style="color:#bb9af7">$1</span>')
+    .replace(/([[\]{}])/g, '<span style="color:#a1a1a1">$1</span>')
+    .replace(/"([^"]+)"(\s*:)/g, '<span style="color:#52a8ff">"$1"</span>$2')
+    .replace(/:\s*"([^"]*)"/g, ': <span style="color:#62c073">"$1"</span>')
+    .replace(/:\s*(\d+\.?\d*)/g, ': <span style="color:#f5a524">$1</span>')
+    .replace(/:\s*(true|false|null)/g, ': <span style="color:#bf7af0">$1</span>')
 }
 
 function highlightCode(code: string): string {

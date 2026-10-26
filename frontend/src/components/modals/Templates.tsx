@@ -95,8 +95,8 @@ export function TemplateModal({ onImport }: { onImport: (url: string) => Promise
                     className={cn(
                       'flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-3.5 transition-all',
                       selectedUrl === template.url
-                        ? 'border-[#60a5fa] bg-linear-to-b from-blue-500/25 to-blue-500/15'
-                        : 'border-ring/40 bg-[linear-gradient(135deg,rgba(59,130,246,0.05)_0%,transparent_50%)] from-blue-500/15 to-blue-500/5 hover:border-[#60a5fa] hover:bg-linear-to-b'
+                        ? 'border-foreground bg-accent/60'
+                        : 'border-border hover:border-(--focus-border) hover:bg-accent/40'
                     )}
                   >
                     <RadioGroupItem value={template.url} id={`tpl-${i}`} className="shrink-0" />
