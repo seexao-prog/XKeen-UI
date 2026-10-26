@@ -80,6 +80,7 @@ const initialState: AppState = {
   showSpeedtestModal: false,
   showAdvisorModal: false,
   showQuickRulesModal: false,
+  showProxyGroupsModal: false,
   updateModalCore: '',
   toasts: [],
   pendingSaveAction: null,
@@ -173,6 +174,7 @@ type CoreState = Omit<
   | 'showGeoScanModal'
   | 'showRouteTestModal'
   | 'showBackupsModal'
+  | 'showProxyGroupsModal'
   | 'showImportAmneziaModal'
   | 'showDevicesModal'
   | 'showPerfModal'
@@ -206,6 +208,7 @@ type ModalState = Pick<
   | 'showSpeedtestModal'
   | 'showAdvisorModal'
   | 'showQuickRulesModal'
+  | 'showProxyGroupsModal'
   | 'updateModalCore'
   | 'pendingSaveAction'
 >
@@ -320,6 +323,7 @@ export function useModalContext() {
       showSpeedtestModal: s.showSpeedtestModal,
       showAdvisorModal: s.showAdvisorModal,
       showQuickRulesModal: s.showQuickRulesModal,
+      showProxyGroupsModal: s.showProxyGroupsModal,
       updateModalCore: s.updateModalCore,
       pendingSaveAction: s.pendingSaveAction,
     }))

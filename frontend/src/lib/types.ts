@@ -158,6 +158,7 @@ export interface AppState {
   showSpeedtestModal: boolean
   showAdvisorModal: boolean
   showQuickRulesModal: boolean
+  showProxyGroupsModal: boolean
   updateModalCore: string
   toasts: ToastMessage[]
   pendingSaveAction: (() => void) | null
@@ -200,6 +201,7 @@ export type AppAction =
         | 'showSpeedtestModal'
         | 'showAdvisorModal'
         | 'showQuickRulesModal'
+        | 'showProxyGroupsModal'
       >
       show: boolean
     }

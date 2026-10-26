@@ -22,6 +22,12 @@ pub struct ConfigReq {
     file: String,
     content: String,
 }
+
+impl ConfigReq {
+    pub(crate) fn new(file: String, content: String) -> Self {
+        Self { file, content }
+    }
+}
 #[derive(Deserialize)]
 pub struct DeleteReq {
     file: String,
@@ -313,7 +319,7 @@ const VALIDATION_TIMEOUT: Duration = Duration::from_secs(30);
 /// (`DecodeJSONConfigStrict`, infra/conf/serial) — конфиги с комментариями
 /// (JSON5/JSONC) будут отклонены. Это фундаментальное ограничение remote-лоадера,
 /// а не баг.
-async fn validate_core(files: &[ConfigReq]) -> Result<(), String> {
+pub(crate) async fn validate_core(files: &[ConfigReq]) -> Result<(), String> {
     // Валидируем только json/jsonc — ровно такой набор xray отбирает из
     // конфигдиректории при формате json (`getRegepxByFormat`).
     let mut sorted: Vec<&ConfigReq> = files

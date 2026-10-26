@@ -13,6 +13,7 @@ import { DevicesModal } from './components/modals/Devices'
 import { GeoScanModal } from './components/modals/GeoScan'
 import { ImportAmneziaModal } from './components/modals/ImportAmnezia'
 import { PerformanceModal } from './components/modals/Performance'
+import { ProxyGroupsModal } from './components/modals/ProxyGroups'
 import { QuickRulesModal } from './components/modals/QuickRules'
 import { RouteTesterModal } from './components/modals/RouteTester'
 import { SettingsModal } from './components/modals/Settings'
@@ -71,6 +72,7 @@ interface ModalManagerProps {
   onReplace: (kind: 'proxy' | 'provider', content: string, oldName: string, renameRefs: boolean) => void
   onImportTemplate: (url: string) => Promise<void>
   openModal: (modal: string) => void
+  onConfigsChanged?: () => void
 }
 
 const ModalManager = memo(function ModalManager({
@@ -81,6 +83,7 @@ const ModalManager = memo(function ModalManager({
   onReplace,
   onImportTemplate,
   openModal,
+  onConfigsChanged,
 }: ModalManagerProps) {
   const { modals, dispatch } = useModalContext()
 
@@ -98,6 +101,7 @@ const ModalManager = memo(function ModalManager({
   const mountSpeedtest = useLazyMount(modals.showSpeedtestModal)
   const mountAdvisor = useLazyMount(modals.showAdvisorModal)
   const mountQuickRules = useLazyMount(modals.showQuickRulesModal)
+  const mountProxyGroups = useLazyMount(modals.showProxyGroupsModal)
 
   return (
     <>
@@ -123,6 +127,7 @@ const ModalManager = memo(function ModalManager({
       {mountSpeedtest && <SpeedtestModal />}
       {mountAdvisor && <ConfigAdvisorModal />}
       {mountQuickRules && <QuickRulesModal />}
+      {mountProxyGroups && <ProxyGroupsModal onApplied={onConfigsChanged} />}
     </>
   )
 })
@@ -561,6 +566,7 @@ function AppContent({ onLogout }: { onLogout: () => void }) {
             onOpenTemplate={() => openModal('showTemplateModal')}
             onOpenGeoScan={() => openModal('showGeoScanModal')}
             onOpenRouteTest={() => openModal('showRouteTestModal')}
+            onOpenProxyGroups={() => openModal('showProxyGroupsModal')}
             onOpenBackups={() => openModal('showBackupsModal')}
             onOpenPerfTool={(modal) => openModal(modal)}
             onRefreshConfigs={() => loadConfigs(undefined, false, true)}
@@ -577,6 +583,7 @@ function AppContent({ onLogout }: { onLogout: () => void }) {
         onReplace={onReplace}
         onImportTemplate={importTemplate}
         openModal={openModal}
+        onConfigsChanged={() => void loadConfigs(undefined, false, true)}
       />
       <CommandPalette openModal={openModal} />
     </div>

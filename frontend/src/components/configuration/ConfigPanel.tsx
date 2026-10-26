@@ -42,6 +42,7 @@ import {
   IconRss,
   IconArrowsSplit2,
   IconSearch,
+  IconStack2,
   IconTrash,
   IconX,
 } from '@tabler/icons-react'
@@ -111,6 +112,7 @@ interface Props {
   onOpenTemplate: () => void
   onOpenGeoScan: () => void
   onOpenRouteTest: () => void
+  onOpenProxyGroups?: () => void
   onOpenBackups: () => void
   onOpenPerfTool: (modal: 'showDevicesModal' | 'showPerfModal' | 'showSpeedtestModal' | 'showAdvisorModal') => void
   onRefreshConfigs: () => Promise<Config[]>
@@ -309,6 +311,7 @@ export function ConfigPanel({
   onOpenTemplate,
   onOpenGeoScan,
   onOpenRouteTest,
+  onOpenProxyGroups,
   onOpenBackups,
   onOpenPerfTool,
   onRefreshConfigs,
@@ -1266,6 +1269,11 @@ export function ConfigPanel({
                           <DropdownMenuItem onClick={() => openQuickRules()}>
                             <IconArrowsSplit2 /> Маршрутизация доменов
                           </DropdownMenuItem>
+                          {onOpenProxyGroups && (
+                            <DropdownMenuItem onClick={onOpenProxyGroups}>
+                              <IconStack2 /> Группы прокси
+                            </DropdownMenuItem>
+                          )}
                           {!isCoreMihomo && (
                             <DropdownMenuItem onClick={() => setShowSubscriptions(true)}>
                               <IconRss /> Подписки
