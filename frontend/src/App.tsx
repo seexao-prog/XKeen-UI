@@ -6,11 +6,15 @@ import { ConfigPanel } from './components/configuration/ConfigPanel'
 import { LogPanel } from './components/log/LogPanel'
 import { ImportModal } from './components/modals/AddOutbound'
 import { CommentsWarningModal } from './components/modals/CommentsWarning'
+import { ConfigAdvisorModal } from './components/modals/ConfigAdvisor'
 import { CoreManageModal } from './components/modals/CoreManagement'
+import { DevicesModal } from './components/modals/Devices'
 import { GeoScanModal } from './components/modals/GeoScan'
 import { ImportAmneziaModal } from './components/modals/ImportAmnezia'
+import { PerformanceModal } from './components/modals/Performance'
 import { RouteTesterModal } from './components/modals/RouteTester'
 import { SettingsModal } from './components/modals/Settings'
+import { SpeedtestModal } from './components/modals/Speedtest'
 import { TemplateModal } from './components/modals/Templates'
 import { UpdateModal } from './components/modals/Update'
 import { StatusBar } from './components/status/StatusBar'
@@ -87,6 +91,10 @@ const ModalManager = memo(function ModalManager({
   const mountSettings = useLazyMount(modals.showSettingsModal)
   const mountGeoScan = useLazyMount(modals.showGeoScanModal)
   const mountRouteTest = useLazyMount(modals.showRouteTestModal)
+  const mountDevices = useLazyMount(modals.showDevicesModal)
+  const mountPerf = useLazyMount(modals.showPerfModal)
+  const mountSpeedtest = useLazyMount(modals.showSpeedtestModal)
+  const mountAdvisor = useLazyMount(modals.showAdvisorModal)
 
   return (
     <>
@@ -107,6 +115,10 @@ const ModalManager = memo(function ModalManager({
       {mountSettings && <SettingsModal />}
       {mountGeoScan && <GeoScanModal />}
       {mountRouteTest && <RouteTesterModal />}
+      {mountDevices && <DevicesModal />}
+      {mountPerf && <PerformanceModal />}
+      {mountSpeedtest && <SpeedtestModal />}
+      {mountAdvisor && <ConfigAdvisorModal />}
     </>
   )
 })
@@ -546,6 +558,7 @@ function AppContent({ onLogout }: { onLogout: () => void }) {
             onOpenGeoScan={() => openModal('showGeoScanModal')}
             onOpenRouteTest={() => openModal('showRouteTestModal')}
             onOpenBackups={() => openModal('showBackupsModal')}
+            onOpenPerfTool={(modal) => openModal(modal)}
             onRefreshConfigs={() => loadConfigs(undefined, false, true)}
           />
           <LogPanel />

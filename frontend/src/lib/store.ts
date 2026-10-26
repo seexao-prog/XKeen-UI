@@ -75,6 +75,10 @@ const initialState: AppState = {
   showGeoScanModal: false,
   showRouteTestModal: false,
   showBackupsModal: false,
+  showDevicesModal: false,
+  showPerfModal: false,
+  showSpeedtestModal: false,
+  showAdvisorModal: false,
   updateModalCore: '',
   toasts: [],
   pendingSaveAction: null,
@@ -169,6 +173,10 @@ type CoreState = Omit<
   | 'showRouteTestModal'
   | 'showBackupsModal'
   | 'showImportAmneziaModal'
+  | 'showDevicesModal'
+  | 'showPerfModal'
+  | 'showSpeedtestModal'
+  | 'showAdvisorModal'
   | 'updateModalCore'
   | 'pendingSaveAction'
   | 'toasts'
@@ -191,6 +199,10 @@ type ModalState = Pick<
   | 'showGeoScanModal'
   | 'showRouteTestModal'
   | 'showBackupsModal'
+  | 'showDevicesModal'
+  | 'showPerfModal'
+  | 'showSpeedtestModal'
+  | 'showAdvisorModal'
   | 'updateModalCore'
   | 'pendingSaveAction'
 >
@@ -300,6 +312,10 @@ export function useModalContext() {
       showGeoScanModal: s.showGeoScanModal,
       showRouteTestModal: s.showRouteTestModal,
       showBackupsModal: s.showBackupsModal,
+      showDevicesModal: s.showDevicesModal,
+      showPerfModal: s.showPerfModal,
+      showSpeedtestModal: s.showSpeedtestModal,
+      showAdvisorModal: s.showAdvisorModal,
       updateModalCore: s.updateModalCore,
       pendingSaveAction: s.pendingSaveAction,
     }))

@@ -153,6 +153,10 @@ export interface AppState {
   showGeoScanModal: boolean
   showRouteTestModal: boolean
   showBackupsModal: boolean
+  showDevicesModal: boolean
+  showPerfModal: boolean
+  showSpeedtestModal: boolean
+  showAdvisorModal: boolean
   updateModalCore: string
   toasts: ToastMessage[]
   pendingSaveAction: (() => void) | null
@@ -190,6 +194,10 @@ export type AppAction =
         | 'showGeoScanModal'
         | 'showRouteTestModal'
         | 'showBackupsModal'
+        | 'showDevicesModal'
+        | 'showPerfModal'
+        | 'showSpeedtestModal'
+        | 'showAdvisorModal'
       >
       show: boolean
     }
