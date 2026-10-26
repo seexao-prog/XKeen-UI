@@ -1377,6 +1377,55 @@ mod tests {
         serde_json::from_str(&jsonc::strip_comments(text)).expect("valid json")
     }
 
+    /// Прогон на реальном config.yaml: `XK_REAL_MIHOMO=/path cargo test real_mihomo -- --ignored --nocapture`.
+    #[test]
+    #[ignore]
+    fn real_mihomo_config_roundtrip() {
+        let path = std::env::var("XK_REAL_MIHOMO").expect("XK_REAL_MIHOMO");
+        let config = std::fs::read_to_string(&path).unwrap();
+        let targets = mihomo_targets(&config).unwrap();
+        println!("targets: {}", targets.iter().map(|(n, k)| format!("{n}({k})")).collect::<Vec<_>>().join(", "));
+        let yt = targets.iter().find(|(_, k)| *k == "group").map(|(n, _)| n.clone()).expect("хотя бы одна proxy-group");
+        let rules = vec![
+            rule("example.com", RuleKind::Domain, TargetKind::Direct, ""),
+            rule("googlevideo.com", RuleKind::Domain, TargetKind::Proxy, &yt),
+            rule("1.2.3.0/24", RuleKind::Cidr, TargetKind::Block, ""),
+        ];
+        let plan = plan_mihomo(&config, &rules, &[]).unwrap();
+        let changed: Vec<String> = diff_lines(&config, &plan.config);
+        println!("--- changed lines ({}):\n{}", changed.len(), changed.join("\n"));
+        for (f, c) in &plan.files {
+            println!("--- {f}:\n{}", c.as_deref().unwrap_or("<delete>"));
+        }
+        let docs = yaml_rust2::YamlLoader::load_from_str(&plan.config).unwrap();
+        let rules_after = docs[0]["rules"].as_vec().unwrap();
+        assert!(rules_after[0].as_str().unwrap().starts_with("RULE-SET,xkeen-ui-quick-"));
+        assert_eq!(rules_after.last().unwrap().as_str(), Some("MATCH,DIRECT"));
+        // возврат: все правила выключены — исходный текст полностью
+        let names: Vec<String> = plan.files.iter().map(|(f, _)| f.clone()).collect();
+        let back = plan_mihomo(&plan.config, &[], &names).unwrap();
+        let rest = diff_lines(&config, &back.config);
+        println!("--- after removal, diff vs original ({}):\n{}", rest.len(), rest.join("\n"));
+    }
+
+    fn diff_lines(a: &str, b: &str) -> Vec<String> {
+        let al: Vec<&str> = a.lines().collect();
+        let bl: Vec<&str> = b.lines().collect();
+        let mut out = vec![];
+        for l in &bl {
+            if !al.contains(l) {
+                out.push(format!("+ {l}"));
+            }
+        }
+        for l in &al {
+            if !bl.contains(l) {
+                out.push(format!("- {l}"));
+            }
+        }
+        out
+    }
+
+
     #[test]
     fn normalize_values() {
         assert_eq!(normalize_value(RuleKind::Domain, " *.YouTube.com ").unwrap(), "youtube.com");

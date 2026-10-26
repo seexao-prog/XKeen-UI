@@ -1338,6 +1338,32 @@ mod tests {
         }
     }
 
+    /// Прогон на реальном config.yaml: `XK_REAL_MIHOMO=/path cargo test real_mihomo -- --ignored --nocapture`.
+    #[test]
+    #[ignore]
+    fn real_mihomo_groups_plan() {
+        let path = std::env::var("XK_REAL_MIHOMO").expect("XK_REAL_MIHOMO");
+        let inv = mihomo_inventory(&std::fs::read_to_string(&path).unwrap());
+        println!("parse_error: {:?}", inv.parse_error);
+        println!("proxies: {:?}", inv.proxies);
+        println!("providers: {:?}", inv.providers);
+        println!("groups: {:?}", inv.groups.iter().map(|g| &g.name).collect::<Vec<_>>());
+        let member = inv.proxies.first().cloned().expect("есть хотя бы один прокси");
+        let mut grp = g("grp-yt-fast", &[&member]);
+        grp.core = "mihomo".into();
+        grp.name = "YouTube быстрые".into();
+        let p = plan_mihomo(&[grp], &[], &Managed::default(), &inv, false, "http://cp.cloudflare.com/generate_204");
+        println!("errors: {:?}\nwarnings: {:?}", p.errors, p.warnings);
+        for f in &p.fixes {
+            println!("fix {}: remove={:?} exclude_add={:?}", f.group, f.remove_proxies, f.exclude_add);
+        }
+        println!("group: {}", serde_json::to_string(&p.groups).unwrap());
+        assert!(p.errors.is_empty());
+        // Все группы с include-all должны получить exclude-filter, иначе сервер останется в них.
+        let with_all = inv.groups.iter().filter(|g| g.include_all || g.include_all_proxies).count();
+        assert_eq!(p.fixes.iter().filter(|f| f.exclude_add.is_some()).count(), with_all);
+    }
+
     fn inv(tags: &[&str]) -> XrayInventory {
         XrayInventory {
             outbounds: tags.iter().map(|t| XrayOutbound { tag: (*t).into(), protocol: "vless".into(), file: "x".into() }).collect(),
