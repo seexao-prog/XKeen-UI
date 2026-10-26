@@ -446,7 +446,10 @@ export function applyMihomoPlan(text: string, plan: MihomoPlan): string {
         if (merged) clone.set('exclude-filter', merged)
         else clone.delete('exclude-filter')
       }
-      edits.push({ start, end: valueEnd, text: emitNode(clone, itemCol, !!item.flow).replace(/\n$/, '') })
+      // Диапазон узла может включать хвостовой перевод строки (и пустые строки) — сохраняем их, иначе
+      // следующая строка (или добавленная группа) прилипнет к последней строке группы.
+      const trailing = /\s*$/.exec(text.slice(start, valueEnd))?.[0] ?? ''
+      edits.push({ start, end: valueEnd, text: emitNode(clone, itemCol, !!item.flow).replace(/\n+$/, '') + trailing })
     }
   }
 
