@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { IconAlertTriangle, IconArrowRight, IconChevronDown, IconChevronUp, IconFileUpload, IconRoute, IconX } from '@tabler/icons-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { apiCall, buildClashHeaders, capitalize, clashFetch } from '../../lib/api'
+import { openQuickRules } from '../../lib/quickRules'
 import { useAppContext, useModalContext } from '../../lib/store'
 import { cn } from '../../lib/utils'
 
@@ -124,6 +125,13 @@ function ResultRow({
           <span className="truncate text-sm font-medium tracking-wider" title={result.target}>
             {result.target}
           </span>
+          <button
+            type="button"
+            onClick={() => openQuickRules(result.target)}
+            className="text-muted-foreground hover:text-foreground shrink-0 text-xs underline-offset-2 hover:underline"
+          >
+            Направить…
+          </button>
         </div>
         <Badge
           variant={result.outcome === 'matched' ? 'emerald' : result.outcome === 'default' ? 'sky' : 'destructive'}

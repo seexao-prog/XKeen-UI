@@ -9,6 +9,7 @@ import { CommentsWarningModal } from './components/modals/CommentsWarning'
 import { CoreManageModal } from './components/modals/CoreManagement'
 import { GeoScanModal } from './components/modals/GeoScan'
 import { ImportAmneziaModal } from './components/modals/ImportAmnezia'
+import { QuickRulesModal } from './components/modals/QuickRules'
 import { RouteTesterModal } from './components/modals/RouteTester'
 import { SettingsModal } from './components/modals/Settings'
 import { TemplateModal } from './components/modals/Templates'
@@ -87,6 +88,7 @@ const ModalManager = memo(function ModalManager({
   const mountSettings = useLazyMount(modals.showSettingsModal)
   const mountGeoScan = useLazyMount(modals.showGeoScanModal)
   const mountRouteTest = useLazyMount(modals.showRouteTestModal)
+  const mountQuickRules = useLazyMount(modals.showQuickRulesModal)
 
   return (
     <>
@@ -107,6 +109,7 @@ const ModalManager = memo(function ModalManager({
       {mountSettings && <SettingsModal />}
       {mountGeoScan && <GeoScanModal />}
       {mountRouteTest && <RouteTesterModal />}
+      {mountQuickRules && <QuickRulesModal />}
     </>
   )
 })

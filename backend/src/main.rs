@@ -9,6 +9,7 @@ mod geo;
 mod logger;
 mod healthchecker;
 mod provider_inspector;
+mod quick_rules;
 mod route_test;
 mod settings;
 mod system;
@@ -506,6 +507,10 @@ async fn main() {
         )
         .route("/api/healthcheck/all", post(healthchecker::post_healthcheck_all))
         .route("/api/device-list", get(api_relay::get_device_list))
+        .route(
+            "/api/quick-rules",
+            get(quick_rules::get_quick_rules).put(quick_rules::put_quick_rules),
+        )
         .route("/api/update", post(updater::post_update))
         .route("/api/geo", get(geo::get_geo))
         .route("/api/geo/site", get(geo::get_geosite))
