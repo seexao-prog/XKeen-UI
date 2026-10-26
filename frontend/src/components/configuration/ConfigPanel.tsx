@@ -63,6 +63,9 @@ import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator,
 import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from '../ui/input-group'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import type { CodeMirrorRef } from './CodeMirror'
+import { useDiffConfirm } from './ConfigDiffDialog'
+import { useConfigCommands } from './useConfigCommands'
+import { KbdShortcut } from '../ui/kbd'
 
 const GuiRouting = lazyLoad(() => import('./xray/GuiRouting'), 'GuiRouting')
 const GuiLog = lazyLoad(() => import('./xray/GuiLog'), 'GuiLog')
@@ -356,6 +359,7 @@ export function ConfigPanel({
     action: () => void
   } | null>(null)
 
+  const diffConfirm = useDiffConfirm()
   const configsRef = useRef(configs)
   const activeIndexRef = useRef(activeConfigIndex)
   const viewStatesRef = useRef<Record<string, any>>({})
@@ -591,7 +595,7 @@ export function ConfigPanel({
     return allowed
   }
 
-  async function saveCurrentConfig(force = false) {
+  async function saveCurrentConfig(force = false, reviewed = false) {
     const targetIndex = activeIndexRef.current
     const cfg = configsRef.current[targetIndex]
     if (!cfg || !editorRef.current) return
@@ -603,6 +607,17 @@ export function ConfigPanel({
       dispatch({ type: 'SHOW_MODAL', modal: 'showCommentsWarningModal', show: true })
       return
     }
+    if (
+      !reviewed &&
+      diffConfirm.request({
+        file: cfg.file,
+        before: cfg.savedContent,
+        after: content,
+        mode: 'save',
+        onConfirm: () => void saveCurrentConfig(true, true),
+      })
+    )
+      return
 
     const targets = await resolveMassTargets()
     if (!targets) return
@@ -725,7 +740,7 @@ export function ConfigPanel({
     }
   }
 
-  async function saveAndApply(force = false) {
+  async function saveAndApply(force = false, reviewed = false) {
     const targetIndex = activeIndexRef.current
     const cfg = configsRef.current[targetIndex]
     if (!cfg || !editorRef.current) return
@@ -737,6 +752,17 @@ export function ConfigPanel({
       dispatch({ type: 'SHOW_MODAL', modal: 'showCommentsWarningModal', show: true })
       return
     }
+    if (
+      !reviewed &&
+      diffConfirm.request({
+        file: cfg.file,
+        before: cfg.savedContent,
+        after: content,
+        mode: 'apply',
+        onConfirm: () => void saveAndApply(true, true),
+      })
+    )
+      return
 
     const targets = await resolveMassTargets()
     if (!targets) return
@@ -836,6 +862,35 @@ export function ConfigPanel({
   const xkeenConfigs = configs.filter((c) => isXkeenFile(c.file))
 
   const isMihomo = isCoreMihomo && (!!activeClashApiPort || !!activeClashApiUnix)
+
+  useConfigCommands({
+    configs,
+    activeIndex: activeConfigIndex,
+    isMihomoCore: isCoreMihomo,
+    canSave,
+    canApply,
+    canFormat,
+    isRunning,
+    isPending,
+    save: () => void saveCurrentConfig(),
+    apply: () => void saveAndApply(),
+    format: () => void editorRef.current?.format(),
+    switchToFile: (index) => {
+      if (isMihomo) {
+        setActivePanel('config')
+        setMountedPanels((prev) => (prev.has('config') ? prev : new Set([...prev, 'config'])))
+      }
+      switchTab(index)
+    },
+    quickBackup: () => void quickBackup(),
+    onOpenImport,
+    onOpenImportAmnezia,
+    onOpenTemplate,
+    onOpenGeoScan,
+    onOpenRouteTest,
+    onOpenBackups,
+  })
+
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
   const usefulLinks = [
     { title: 'Инструкция XKeen', url: 'https://github.com/Corvus-Malus/XKeen/' },
@@ -1120,11 +1175,22 @@ export function ConfigPanel({
                           </Button>
                         }
                       />
-                      <TooltipContent>Сохранить и перезапустить</TooltipContent>
+                      <TooltipContent className="flex items-center gap-2">
+                        Сохранить и перезапустить <KbdShortcut shortcut="Mod+Enter" />
+                      </TooltipContent>
                     </Tooltip>
-                    <Button size="default" disabled={!canSave} onClick={() => saveCurrentConfig()}>
-                      <IconDeviceFloppy data-icon="inline-start" /> Сохранить
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <Button size="default" disabled={!canSave} onClick={() => saveCurrentConfig()}>
+                            <IconDeviceFloppy data-icon="inline-start" /> Сохранить
+                          </Button>
+                        }
+                      />
+                      <TooltipContent className="flex items-center gap-2">
+                        Сохранить файл <KbdShortcut shortcut="Mod+S" />
+                      </TooltipContent>
+                    </Tooltip>
                     <Tooltip>
                       <TooltipTrigger
                         render={
@@ -1133,7 +1199,9 @@ export function ConfigPanel({
                           </Button>
                         }
                       />
-                      <TooltipContent>Форматировать файл</TooltipContent>
+                      <TooltipContent className="flex items-center gap-2">
+                        Форматировать файл <KbdShortcut shortcut="Shift+Alt+F" />
+                      </TooltipContent>
                     </Tooltip>
                     <DropdownMenu>
                       <DropdownMenuTrigger
@@ -1237,6 +1305,7 @@ export function ConfigPanel({
             onConfirm={massConfirm.action}
           />
         )}
+        {diffConfirm.dialog}
       </>
     </TooltipProvider>
   )
