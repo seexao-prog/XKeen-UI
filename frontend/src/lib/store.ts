@@ -559,6 +559,30 @@ export async function fetchClashProxies(port: string, secret?: string | null, si
   }
 }
 
+/**
+ * Выбор прокси в селекторе через Clash API: PUT /proxies/<selector>, обновление списка прокси и закрытие
+ * соединений, шедших через этот селектор (иначе они доживут на старом сервере).
+ */
+export async function selectClashProxy(
+  port: string,
+  secret: string | null | undefined,
+  unix: string | null | undefined,
+  selectorName: string,
+  proxyName: string
+): Promise<void> {
+  await clashFetch(port, `proxies/${encodeURIComponent(selectorName)}`, {
+    method: 'PUT',
+    secret,
+    unix: unix ?? null,
+    body: { name: proxyName },
+  })
+  await fetchClashProxies(port, secret, true, unix ?? null)
+  const affected = getConnections()
+    .filter((conn) => conn.chains?.includes(selectorName))
+    .map((conn) => conn.id)
+  await Promise.all(affected.map((id) => clashFetch(port, `connections/${id}`, { method: 'DELETE', secret, unix: unix ?? null })))
+}
+
 export async function fetchClashRuleProviders(port: string, secret?: string | null, unix?: string | null): Promise<void> {
   const data = await clashFetch<{ providers?: Record<string, RuleProvider> }>(port, 'providers/rules', { secret, unix }).catch(() => null)
   if (data) useProxiesStore.setState({ ruleProviders: Object.values(data.providers ?? {}), ruleProvidersLoaded: true })

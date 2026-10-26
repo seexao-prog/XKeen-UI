@@ -22,7 +22,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { create } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { clashFetch } from '../../../lib/api'
-import { fetchClashProxies, getConnections, showToast, useProxiesStore, useSettings } from '../../../lib/store'
+import { fetchClashProxies, selectClashProxy, showToast, useProxiesStore, useSettings } from '../../../lib/store'
 import { DEFAULT_PING_TEST_TIMEOUT, DEFAULT_PING_TEST_URL } from '../../../lib/types'
 
 interface ProxyHistory {
@@ -309,7 +309,7 @@ const ProxyCard = memo(function ProxyCard({
             ? 'border-foreground bg-accent/60'
             : selectionDisabled
               ? 'border-border'
-              : 'border-border hover:border-(--focus-border) hover:bg-accent/40'
+              : 'border-border hover:bg-accent/40 hover:border-(--focus-border)'
       )}
       onClick={() => !selectionDisabled && onSelect(selectorName, proxyName)}
       onContextMenu={(e) => {
@@ -1079,21 +1079,7 @@ export function SelectorsPanel({ clashApiPort, mode, clashApiSecret, clashApiUni
       }))
       ;(async () => {
         try {
-          await clashFetch(clashApiPort, `proxies/${encodeURIComponent(selectorName)}`, {
-            method: 'PUT',
-            secret: clashApiSecret,
-            unix: clashApiUnix ?? null,
-            body: { name: proxyName },
-          })
-          await fetchClashProxies(clashApiPort, clashApiSecret, true, clashApiUnix ?? null)
-          const affected = getConnections()
-            .filter((conn) => conn.chains?.includes(selectorName))
-            .map((conn) => conn.id)
-          await Promise.all(
-            affected.map((id) =>
-              clashFetch(clashApiPort, `connections/${id}`, { method: 'DELETE', secret: clashApiSecret, unix: clashApiUnix ?? null })
-            )
-          )
+          await selectClashProxy(clashApiPort, clashApiSecret, clashApiUnix, selectorName, proxyName)
         } catch {
           /* */
         }

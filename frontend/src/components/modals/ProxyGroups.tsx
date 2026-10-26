@@ -42,7 +42,16 @@ import {
   type XrayInventory,
   type XrayPlan,
 } from '../../lib/proxyGroups'
-import { appendPingEntries, useAppContext, useModalContext, usePingHistoryStore, useProxiesStore } from '../../lib/store'
+import {
+  appendPingEntries,
+  getAppState,
+  selectClashProxy,
+  syncClashApiPort,
+  useAppContext,
+  useModalContext,
+  usePingHistoryStore,
+  useProxiesStore,
+} from '../../lib/store'
 import { cn } from '../../lib/utils'
 
 type View = 'list' | 'edit' | 'review'
@@ -105,6 +114,9 @@ export function ProxyGroupsModal({ onApplied }: { onApplied?: () => void }) {
   const [acceptedFixes, setAcceptedFixes] = useState<Set<string>>(new Set())
   const [pendingGroups, setPendingGroups] = useState<ProxyGroup[]>([])
   const [busy, setBusy] = useState(false)
+  /** «Сразу выбрать»: тег группы → селекторы, в которых её нужно выбрать после применения. */
+  const [selectAfterApply, setSelectAfterApply] = useState<Record<string, string[]>>({})
+  const [selectNow, setSelectNow] = useState(true)
 
   const core = data?.core ?? 'xray'
   const proxies = useProxiesStore((s) => s.proxies)
@@ -181,6 +193,7 @@ export function ProxyGroupsModal({ onApplied }: { onApplied?: () => void }) {
   function startEdit(index: number) {
     setEditIndex(index)
     setDraft(index >= 0 ? structuredClone(groups[index]) : emptyGroup(core))
+    setSelectNow(true)
     setView('edit')
   }
 
@@ -201,6 +214,14 @@ export function ProxyGroupsModal({ onApplied }: { onApplied?: () => void }) {
     if (clash)
       return (showToast(`«${clash.name}» закреплён за эксклюзивной группой «${memberOwner(clash.name, editIndex)!.name}»`, 'error'), null)
     if (!d.id) d.id = d.tag
+    if (d.core !== 'mihomo') {
+      d.attach_to = []
+      d.attach_first = false
+    }
+    // «Сразу выбрать» — только в новых для этой группы селекторах (чтобы не перебивать ручной выбор при каждой правке).
+    const prevAttach = editIndex >= 0 && groups[editIndex].tag === d.tag ? (groups[editIndex].attach_to ?? []) : []
+    const fresh = (d.attach_to ?? []).filter((s) => !prevAttach.includes(s))
+    setSelectAfterApply(selectNow && d.enabled && fresh.length ? { [d.tag]: fresh } : {})
     const next = [...groups]
     if (editIndex >= 0) next[editIndex] = d
     else next.push(d)
@@ -291,12 +312,44 @@ export function ProxyGroupsModal({ onApplied }: { onApplied?: () => void }) {
       setRenames({})
       setAcceptedFixes(new Set())
       onApplied?.()
+      if (core === 'mihomo') await selectAttached()
       await load()
     } catch (e: any) {
       showToast(`Не применено: ${e.message}`, 'error')
     } finally {
       setBusy(false)
     }
+  }
+
+  /** После hot reload выбирает новую группу в отмеченных селекторах через Clash API (как клик во вкладке селекторов). */
+  async function selectAttached() {
+    const pairs = Object.entries(selectAfterApply).flatMap(([tag, selectors]) => selectors.map((s) => [s, tag] as const))
+    setSelectAfterApply({})
+    if (!pairs.length) return
+    syncClashApiPort()
+    const { clashApiPort, clashApiSecret, clashApiUnix } = getAppState()
+    if (!clashApiPort && !clashApiUnix) {
+      showToast('Выберите группу в селекторах вручную: Clash API недоступен', 'error')
+      return
+    }
+    const failed: string[] = []
+    for (const [selector, tag] of pairs) {
+      let ok = false
+      // после перезагрузки конфига группа появляется в Clash API не мгновенно
+      for (const delay of [0, 700, 1500]) {
+        if (delay) await new Promise((r) => setTimeout(r, delay))
+        try {
+          await selectClashProxy(clashApiPort ?? '', clashApiSecret, clashApiUnix, selector, tag)
+          ok = true
+          break
+        } catch {
+          /* повтор */
+        }
+      }
+      if (!ok) failed.push(selector)
+    }
+    if (failed.length) showToast(`Не удалось выбрать группу в: ${failed.join(', ')}`, 'error')
+    else showToast(`Выбрано в селекторах: ${pairs.map(([s]) => s).join(', ')}`)
   }
 
   function removeGroup(index: number) {
@@ -398,6 +451,11 @@ export function ProxyGroupsModal({ onApplied }: { onApplied?: () => void }) {
               pinging={pinging}
               onPing={() => void pingMembers(draft.members.map((m) => m.name))}
               mihomoSmart={mihomoSmart}
+              selectors={
+                core === 'mihomo' ? (data.inventory as MihomoInventory).groups.filter((g) => !groups.some((x) => x.tag === g.name)) : []
+              }
+              selectNow={selectNow}
+              setSelectNow={setSelectNow}
             />
           ) : (
             <ReviewView
@@ -485,6 +543,17 @@ function ListView(props: {
                     {g.exclusive && <Badge variant="outline">эксклюзивная</Badge>}
                     {used && <Badge variant="sky">в правилах</Badge>}
                   </div>
+                  {core === 'mihomo' && !!g.attach_to?.length && (
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                      <span className="text-muted-foreground text-xs">в селекторах:</span>
+                      {g.attach_to.map((s) => (
+                        <Badge key={s} variant="secondary">
+                          {s}
+                          {g.attach_first ? ' ★' : ''}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                   <div className="text-muted-foreground mt-1 truncate text-xs">
                     {g.members.length} серв.: {g.members.map((m) => m.name).join(', ')}
                   </div>
@@ -609,9 +678,27 @@ function EditView(props: {
   pinging: boolean
   onPing: () => void
   mihomoSmart: boolean
+  selectors: MihomoInventory['groups']
+  selectNow: boolean
+  setSelectNow: (v: boolean) => void
 }) {
   const { draft, setDraft, core, candidates } = props
   const [query, setQuery] = useState('')
+  const [selQuery, setSelQuery] = useState('')
+  const [showAllTypes, setShowAllTypes] = useState(false)
+  const attached = new Set(draft.attach_to ?? [])
+  const memberSet = new Set(draft.members.map((m) => m.name))
+  const selectorList = props.selectors.filter(
+    (s) =>
+      (showAllTypes || s.type === 'select' || attached.has(s.name)) &&
+      s.name !== draft.tag &&
+      s.name.toLowerCase().includes(selQuery.toLowerCase())
+  )
+  const hiddenTypes = props.selectors.filter((s) => s.type !== 'select').length
+  function toggleSelector(name: string) {
+    const next = attached.has(name) ? (draft.attach_to ?? []).filter((n) => n !== name) : [...(draft.attach_to ?? []), name]
+    setDraft({ ...draft, attach_to: next })
+  }
   const [advanced, setAdvanced] = useState(false)
   const set = (patch: Partial<ProxyGroup>) => setDraft({ ...draft, ...patch })
   const setS = (patch: Partial<ProxyGroup['settings']>) => setDraft({ ...draft, settings: { ...draft.settings, ...patch } })
@@ -736,6 +823,76 @@ function EditView(props: {
             ))}
           </div>
         </div>
+
+        {core === 'mihomo' && (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-2">
+              <Label className="text-sm">
+                Показывать в селекторах <span className="text-muted-foreground">({attached.size})</span>
+              </Label>
+              {hiddenTypes > 0 && (
+                <button
+                  type="button"
+                  className="text-muted-foreground hover:text-foreground cursor-pointer text-xs"
+                  onClick={() => setShowAllTypes((v) => !v)}
+                >
+                  {showAllTypes ? 'Только select' : `Все типы (+${hiddenTypes})`}
+                </button>
+              )}
+            </div>
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              Группа появится вариантом выбора в отмеченных селекторах — например, в «YouTube» можно будет выбрать эту группу вместо
+              одиночного сервера. Панель допишет её в <code className="font-mono">proxies</code> селектора и уберёт, если снять отметку.
+            </p>
+            {props.selectors.length > 6 && (
+              <div className="relative">
+                <IconSearch size={14} className="text-muted-foreground absolute top-1/2 left-2.5 -translate-y-1/2" />
+                <Input value={selQuery} onChange={(e) => setSelQuery(e.target.value)} placeholder="Поиск селектора" className="pl-8" />
+              </div>
+            )}
+            <div className="max-h-48 overflow-y-auto rounded-lg border">
+              {selectorList.length === 0 && <div className="text-muted-foreground p-4 text-center text-sm">Селекторов нет</div>}
+              {selectorList.map((s) => {
+                const cycle = memberSet.has(s.name)
+                const isSel = attached.has(s.name)
+                return (
+                  <div
+                    key={s.name}
+                    className={cn(
+                      'flex items-center gap-2.5 border-b px-3 py-2 text-sm last:border-b-0',
+                      cycle ? 'opacity-50' : 'hover:bg-accent/40 cursor-pointer'
+                    )}
+                    onClick={() => !cycle && toggleSelector(s.name)}
+                    title={cycle ? 'Этот селектор — участник группы: получится цикл' : undefined}
+                  >
+                    <Checkbox checked={isSel} disabled={cycle} />
+                    <span className="min-w-0 flex-1 truncate">{s.name}</span>
+                    {s.type !== 'select' && <Badge variant="secondary">{s.type}</Badge>}
+                    {s.proxies.includes(draft.tag) && !isSel && <Badge variant="outline">уже вписана вручную</Badge>}
+                    <span className="text-muted-foreground hidden text-xs sm:inline">{s.proxies.length} вар.</span>
+                  </div>
+                )
+              })}
+            </div>
+            {attached.size > 0 && (
+              <div className="flex flex-col gap-2 rounded-lg border px-3 py-2.5">
+                <label className="flex cursor-pointer items-center justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-medium">Вариант по умолчанию</div>
+                    <div className="text-muted-foreground text-xs">
+                      Поставить первой в списке — mihomo выбирает её, если в селекторе ещё ничего не выбрано
+                    </div>
+                  </div>
+                  <Switch checked={!!draft.attach_first} onCheckedChange={(v) => set({ attach_first: v })} />
+                </label>
+                <label className="flex cursor-pointer items-center gap-2 text-sm">
+                  <Checkbox checked={props.selectNow} onCheckedChange={(v) => props.setSelectNow(!!v)} />
+                  Сразу выбрать эту группу в новых отмеченных селекторах
+                </label>
+              </div>
+            )}
+          </div>
+        )}
 
         {core === 'xray' && (
           <Field label="Резерв, если все серверы группы недоступны">

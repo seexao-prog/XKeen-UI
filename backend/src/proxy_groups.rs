@@ -101,6 +101,10 @@ pub struct ProxyGroup {
     /// Xray fallbackTag: куда идёт трафик, если все участники недоступны.
     pub fallback: String,
     pub settings: GroupSettings,
+    /// Mihomo: пользовательские группы (селекторы), куда панель добавит эту группу вариантом выбора.
+    pub attach_to: Vec<String>,
+    /// Mihomo: ставить первым элементом `proxies` (вариант по умолчанию), иначе — в конец.
+    pub attach_first: bool,
 }
 
 impl Default for ProxyGroup {
@@ -116,6 +120,8 @@ impl Default for ProxyGroup {
             enabled: true,
             fallback: String::new(),
             settings: GroupSettings::default(),
+            attach_to: vec![],
+            attach_first: false,
         }
     }
 }
@@ -144,6 +150,8 @@ impl Default for Observer {
 pub struct Managed {
     /// Mihomo: какой regexp панель дописала в exclude-filter чужой группы (чтобы потом снять).
     pub mihomo_excludes: BTreeMap<String, String>,
+    /// Mihomo: какие группы панели вписаны в `proxies` пользовательской группы (чтобы снимать только своё).
+    pub mihomo_attached: BTreeMap<String, Vec<String>>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
@@ -751,6 +759,10 @@ pub struct MihomoFix {
     pub remove_proxies: Vec<String>,
     pub exclude_remove: Option<String>,
     pub exclude_add: Option<String>,
+    /// Группы панели, которые нужно дописать в конец `proxies` (привязка к селектору).
+    pub add_proxies: Vec<String>,
+    /// Группы панели, которые нужно поставить в начало `proxies` (вариант по умолчанию), в этом порядке.
+    pub prepend_proxies: Vec<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Default)]
@@ -981,11 +993,70 @@ pub fn plan_mihomo(groups: &[ProxyGroup], old: &[ProxyGroup], managed: &Managed,
         }
     }
 
+    // Привязка к пользовательским селекторам: проверки и желаемое состояние «селектор → группы панели».
+    let mut want_attached: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    let mut want_first: BTreeSet<(String, String)> = BTreeSet::new();
+    for g in groups.iter().filter(|g| g.enabled) {
+        let member_names: BTreeSet<&str> = g.members.iter().map(|m| m.name.as_str()).collect();
+        for target in &g.attach_to {
+            if target == &g.tag {
+                p.errors.push(format!("Группу «{}» нельзя показать в самой себе", g.name));
+                continue;
+            }
+            if managed_names.contains(target) {
+                p.errors.push(format!("«{target}» — группа панели; привязывать можно только к своим селекторам из config.yaml"));
+                continue;
+            }
+            if member_names.contains(target.as_str()) {
+                p.errors.push(format!("«{target}» входит в участники группы «{}» — получится цикл", g.name));
+                continue;
+            }
+            if !inv.groups.iter().any(|x| &x.name == target) {
+                p.errors.push(format!("Селектор «{target}» не найден в config.yaml"));
+                continue;
+            }
+            let list = want_attached.entry(target.clone()).or_default();
+            if !list.contains(&g.tag) {
+                list.push(g.tag.clone());
+            }
+            if g.attach_first {
+                want_first.insert((target.clone(), g.tag.clone()));
+            }
+        }
+    }
+
     // Эксклюзивность.
     let excl: Vec<&Member> = groups.iter().filter(|g| g.enabled && g.exclusive).flat_map(|g| g.members.iter()).collect();
     for og in inv.groups.iter().filter(|g| !managed_names.contains(&g.name)) {
         let mut fix = MihomoFix { group: og.name.clone(), ..Default::default() };
         fix.remove_proxies = og.proxies.iter().filter(|n| excl.iter().any(|m| m.provider.is_none() && &m.name == *n)).cloned().collect();
+        // Привязки: снимаем только то, что вписала панель и что больше не нужно; добавляем недостающее.
+        let was: &[String] = managed.mihomo_attached.get(&og.name).map(Vec::as_slice).unwrap_or(&[]);
+        let want: &[String] = want_attached.get(&og.name).map(Vec::as_slice).unwrap_or(&[]);
+        let wants_first = |tag: &String| want_first.contains(&(og.name.clone(), tag.clone()));
+        for tag in was {
+            if !og.proxies.contains(tag) || fix.remove_proxies.contains(tag) {
+                continue;
+            }
+            // Перестановка нужна, только если сменился режим «первым в списке».
+            let first_now = og.proxies.first() == Some(tag);
+            let reorder = want.contains(tag) && ((wants_first(tag) && !first_now) || (!wants_first(tag) && first_now && og.proxies.len() > 1));
+            if !want.contains(tag) || reorder {
+                fix.remove_proxies.push(tag.clone());
+            }
+        }
+        for tag in want {
+            if !og.proxies.contains(tag) || fix.remove_proxies.contains(tag) {
+                if wants_first(tag) {
+                    fix.prepend_proxies.push(tag.clone());
+                } else {
+                    fix.add_proxies.push(tag.clone());
+                }
+            }
+        }
+        if !want.is_empty() {
+            p.managed.mihomo_attached.insert(og.name.clone(), want.to_vec());
+        }
         let takes_all_proxies = og.include_all || og.include_all_proxies;
         let uses = |pr: &str| og.include_all || og.include_all_providers || og.uses.iter().any(|u| u == pr);
         let filter_ok = |name: &str| -> bool {
@@ -1013,8 +1084,14 @@ pub fn plan_mihomo(groups: &[ProxyGroup], old: &[ProxyGroup], managed: &Managed,
         if let Some(re) = new_re {
             p.managed.mihomo_excludes.insert(og.name.clone(), re);
         }
-        if !fix.remove_proxies.is_empty() || fix.exclude_add.is_some() || fix.exclude_remove.is_some() {
-            if fix.remove_proxies.len() == og.proxies.len() && !og.proxies.is_empty() && og.uses.is_empty() && !takes_all_proxies && !og.include_all_providers {
+        if !fix.remove_proxies.is_empty()
+            || !fix.add_proxies.is_empty()
+            || !fix.prepend_proxies.is_empty()
+            || fix.exclude_add.is_some()
+            || fix.exclude_remove.is_some()
+        {
+            let emptied = fix.remove_proxies.len() == og.proxies.len() && fix.add_proxies.is_empty() && fix.prepend_proxies.is_empty();
+            if emptied && !og.proxies.is_empty() && og.uses.is_empty() && !takes_all_proxies && !og.include_all_providers {
                 p.warnings.push(format!("В группе «{}» не останется прокси", og.name));
             }
             p.fixes.push(fix);
@@ -1027,7 +1104,13 @@ pub fn plan_mihomo(groups: &[ProxyGroup], old: &[ProxyGroup], managed: &Managed,
             if inv.rule_targets.iter().any(|t| t == n) {
                 p.errors.push(format!("На группу «{n}» ссылаются правила (rules) — сначала уберите их"));
             }
-            if inv.groups.iter().any(|g| !managed_names.contains(&g.name) && g.proxies.contains(n)) {
+            // Ссылки, которые вписала сама панель (привязки), она же и снимет — это не ошибка.
+            let manual_ref = inv.groups.iter().any(|g| {
+                !managed_names.contains(&g.name)
+                    && g.proxies.contains(n)
+                    && !managed.mihomo_attached.get(&g.name).is_some_and(|tags| tags.contains(n))
+            });
+            if manual_ref {
                 p.errors.push(format!("Группа «{n}» используется в других группах — сначала уберите её оттуда"));
             }
         }
@@ -1536,6 +1619,117 @@ rules:
         let auto3 = p3.fixes.iter().find(|f| f.group == "AUTO").unwrap();
         assert_eq!(auto3.exclude_remove.as_deref(), Some("^(?:DE 1|fast1)$"));
         assert!(auto3.exclude_add.is_none());
+    }
+
+    const ATTACH_YAML: &str = r#"
+proxies:
+  - { name: fast1, type: ss, server: a, port: 1, cipher: aes-128-gcm, password: x }
+  - { name: slow1, type: ss, server: b, port: 1, cipher: aes-128-gcm, password: x }
+proxy-groups:
+  - { name: YouTube, type: select, include-all: true, proxies: [Fallback, DIRECT] }
+  - { name: Fallback, type: fallback, include-all: true, url: http://u, interval: 300 }
+  - { name: Manual, type: select, proxies: [slow1, grp-yt] }
+rules:
+  - MATCH,DIRECT
+"#;
+
+    fn mg(tag: &str, members: &[&str], attach: &[&str], first: bool) -> ProxyGroup {
+        let mut x = g(tag, members);
+        x.core = "mihomo".into();
+        x.exclusive = false;
+        x.attach_to = attach.iter().map(|s| s.to_string()).collect();
+        x.attach_first = first;
+        x
+    }
+
+    fn fix<'a>(p: &'a MihomoPlan, group: &str) -> Option<&'a MihomoFix> {
+        p.fixes.iter().find(|f| f.group == group)
+    }
+
+    #[test]
+    fn mihomo_attach_appends_and_prepends() {
+        let inv = mihomo_inventory(&ATTACH_YAML.replace(", grp-yt]", "]"));
+        let p = plan_mihomo(&[mg("grp-yt", &["fast1"], &["YouTube"], false)], &[], &Managed::default(), &inv, false, "u");
+        assert!(p.errors.is_empty(), "{:?}", p.errors);
+        let f = fix(&p, "YouTube").unwrap();
+        assert_eq!(f.add_proxies, vec!["grp-yt"]);
+        assert!(f.prepend_proxies.is_empty() && f.remove_proxies.is_empty());
+        assert_eq!(p.managed.mihomo_attached.get("YouTube"), Some(&vec!["grp-yt".to_string()]));
+
+        let p2 = plan_mihomo(&[mg("grp-yt", &["fast1"], &["YouTube"], true)], &[], &Managed::default(), &inv, false, "u");
+        let f2 = fix(&p2, "YouTube").unwrap();
+        assert_eq!(f2.prepend_proxies, vec!["grp-yt"]);
+        assert!(f2.add_proxies.is_empty());
+    }
+
+    #[test]
+    fn mihomo_attach_is_idempotent_and_reorders() {
+        let managed = Managed { mihomo_attached: [("YouTube".to_string(), vec!["grp-yt".to_string()])].into(), ..Default::default() };
+        // Уже привязана в конец — повторное применение ничего не меняет.
+        let mut inv = mihomo_inventory(&ATTACH_YAML.replace(", grp-yt]", "]"));
+        for x in inv.groups.iter_mut().filter(|x| x.name == "YouTube") {
+            x.proxies.push("grp-yt".into());
+        }
+        let old = vec![mg("grp-yt", &["fast1"], &["YouTube"], false)];
+        let p = plan_mihomo(&old, &old, &managed, &inv, false, "u");
+        assert!(fix(&p, "YouTube").is_none(), "{:?}", p.fixes);
+        // Переключили на «первой» — снять и поставить в начало.
+        let now = vec![mg("grp-yt", &["fast1"], &["YouTube"], true)];
+        let p2 = plan_mihomo(&now, &old, &managed, &inv, false, "u");
+        let f = fix(&p2, "YouTube").unwrap();
+        assert_eq!(f.remove_proxies, vec!["grp-yt"]);
+        assert_eq!(f.prepend_proxies, vec!["grp-yt"]);
+    }
+
+    #[test]
+    fn mihomo_detach_removes_only_managed_refs() {
+        // В Manual ссылку на grp-yt вписал пользователь, в YouTube — панель.
+        let mut inv = mihomo_inventory(ATTACH_YAML);
+        for x in inv.groups.iter_mut().filter(|x| x.name == "YouTube") {
+            x.proxies.push("grp-yt".into());
+        }
+        let managed = Managed { mihomo_attached: [("YouTube".to_string(), vec!["grp-yt".to_string()])].into(), ..Default::default() };
+        let old = vec![mg("grp-yt", &["fast1"], &["YouTube"], false)];
+        // Сняли привязку — удаляется только из YouTube, Manual не трогаем.
+        let p = plan_mihomo(&[mg("grp-yt", &["fast1"], &[], false)], &old, &managed, &inv, false, "u");
+        assert!(p.errors.is_empty(), "{:?}", p.errors);
+        assert_eq!(fix(&p, "YouTube").unwrap().remove_proxies, vec!["grp-yt"]);
+        assert!(fix(&p, "Manual").is_none());
+        assert!(p.managed.mihomo_attached.is_empty());
+        // Удалили группу: привязка панели — не ошибка, а ручная ссылка в Manual — ошибка.
+        let p2 = plan_mihomo(&[], &old, &managed, &inv, false, "u");
+        assert_eq!(p2.errors.len(), 1, "{:?}", p2.errors);
+        assert!(p2.errors[0].contains("используется в других группах"));
+        // Без ручной ссылки удаление привязанной группы проходит и снимает привязку.
+        for x in inv.groups.iter_mut().filter(|x| x.name == "Manual") {
+            x.proxies.retain(|n| n != "grp-yt");
+        }
+        let p3 = plan_mihomo(&[], &old, &managed, &inv, false, "u");
+        assert!(p3.errors.is_empty(), "{:?}", p3.errors);
+        assert_eq!(fix(&p3, "YouTube").unwrap().remove_proxies, vec!["grp-yt"]);
+        // Выключили группу — то же самое.
+        let mut off = mg("grp-yt", &["fast1"], &["YouTube"], false);
+        off.enabled = false;
+        let p4 = plan_mihomo(&[off], &old, &managed, &inv, false, "u");
+        assert!(p4.errors.is_empty(), "{:?}", p4.errors);
+        assert_eq!(fix(&p4, "YouTube").unwrap().remove_proxies, vec!["grp-yt"]);
+    }
+
+    #[test]
+    fn mihomo_attach_rejects_bad_targets() {
+        let inv = mihomo_inventory(&ATTACH_YAML.replace(", grp-yt]", "]"));
+        let err = |gs: &[ProxyGroup]| plan_mihomo(gs, &[], &Managed::default(), &inv, false, "u").errors;
+        assert!(err(&[mg("grp-yt", &["fast1"], &["Nope"], false)]).iter().any(|e| e.contains("не найден")));
+        assert!(err(&[mg("grp-yt", &["fast1"], &["grp-yt"], false)]).iter().any(|e| e.contains("в самой себе")));
+        // цикл: селектор YouTube — участник самой группы
+        assert!(err(&[mg("grp-yt", &["fast1", "YouTube"], &["YouTube"], false)]).iter().any(|e| e.contains("цикл")));
+        // к другой группе панели привязывать нельзя
+        let two = [mg("grp-a", &["fast1"], &["grp-b"], false), mg("grp-b", &["slow1"], &[], false)];
+        assert!(err(&two).iter().any(|e| e.contains("группа панели")));
+        // выключенная группа с несуществующей целью не мешает
+        let mut off = mg("grp-yt", &["fast1"], &["Nope"], false);
+        off.enabled = false;
+        assert!(err(&[off]).is_empty());
     }
 
     #[test]

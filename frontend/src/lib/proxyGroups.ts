@@ -6,7 +6,7 @@
 // правки по диапазонам YAML-узлов для Mihomo) — пользователь видит diff и подтверждает.
 
 import { applyEdits, modify, parse as parseJsonc, type FormattingOptions, type JSONPath } from 'jsonc-parser'
-import { Document, isMap, isScalar, isSeq, parseDocument, type YAMLMap } from 'yaml'
+import { Document, isMap, isScalar, isSeq, parseDocument, Scalar, type YAMLMap, type YAMLSeq } from 'yaml'
 
 export type XrayStrategy = 'smart' | 'leastLoad' | 'leastPing' | 'roundRobin' | 'random'
 export type MihomoStrategy = 'smart' | 'url-test' | 'fallback' | 'load-balance' | 'select'
@@ -42,6 +42,10 @@ export interface ProxyGroup {
   enabled: boolean
   fallback: string
   settings: GroupSettings
+  /** Mihomo: пользовательские селекторы, в которые группа добавляется вариантом выбора. */
+  attach_to?: string[]
+  /** Mihomo: ставить первой в списке селектора (вариант по умолчанию). */
+  attach_first?: boolean
 }
 
 export interface Observer {
@@ -53,6 +57,8 @@ export interface Observer {
 
 export interface Managed {
   mihomo_excludes: Record<string, string>
+  /** селектор → группы панели, которые панель вписала в его proxies */
+  mihomo_attached?: Record<string, string[]>
 }
 
 export interface XrayInventory {
@@ -111,6 +117,10 @@ export interface MihomoFix {
   remove_proxies: string[]
   exclude_remove: string | null
   exclude_add: string | null
+  /** дописать в конец proxies (привязка к селектору) */
+  add_proxies?: string[]
+  /** поставить в начало proxies (вариант по умолчанию) */
+  prepend_proxies?: string[]
 }
 
 export interface MihomoPlan {
@@ -170,7 +180,20 @@ export const MIHOMO_STRATEGIES: { id: MihomoStrategy; title: string; hint: strin
 ]
 
 export function emptyGroup(core: 'xray' | 'mihomo'): ProxyGroup {
-  return { id: '', name: '', tag: '', core, members: [], strategy: 'smart', exclusive: true, enabled: true, fallback: '', settings: {} }
+  return {
+    id: '',
+    name: '',
+    tag: '',
+    core,
+    members: [],
+    strategy: 'smart',
+    exclusive: true,
+    enabled: true,
+    fallback: '',
+    settings: {},
+    attach_to: [],
+    attach_first: false,
+  }
 }
 
 const TRANSLIT: Record<string, string> = {
@@ -401,6 +424,70 @@ function mergeExclude(current: string, remove: string | null, add: string | null
   return parts.join('`')
 }
 
+/** Текст скаляра для вставки в список (с кавычками, если без них YAML прочитает не строку или сломается). */
+function scalarText(value: string, flow: boolean): string {
+  const d = new Document()
+  d.contents = new Scalar(value) as any
+  const s = d.toString({ lineWidth: 0 }).replace(/\n+$/, '')
+  return flow && /[,[\]{}]/.test(s) && !/^["']/.test(s) ? JSON.stringify(value) : s
+}
+
+/**
+ * Точечная правка списка proxies группы: удаление/добавление элементов без переформатирования
+ * остального. Снятие того, что добавили, возвращает исходный текст байт в байт.
+ * `null` — случай не поддержан (нет ключа, комментарии/переносы внутри flow-списка) — тогда группа
+ * пересобирается целиком.
+ */
+function proxiesSeqEdits(text: string, node: unknown, remove: string[], add: string[], prepend: string[]): TextEdit[] | null {
+  if (!isSeq(node) || !node.range) return null
+  const items = node.items
+  if (!items.every((i) => isScalar(i) && i.range)) return null
+  const scalars = items as Scalar[]
+  const drop = (s: Scalar) => remove.includes(String(s.value))
+
+  if (node.flow) {
+    const [start, end] = node.range
+    const src = text.slice(start, end)
+    if (src.includes('\n') || src.includes('#') || !src.startsWith('[')) return null
+    const kept = scalars.filter((s) => !drop(s)).map((s) => text.slice(s.range![0], s.range![1]))
+    const all = [...prepend.map((t) => scalarText(t, true)), ...kept, ...add.map((t) => scalarText(t, true))]
+    let open = '['
+    let close = ']'
+    let sep = ', '
+    if (scalars.length) {
+      open = text.slice(start, scalars[0].range![0])
+      close = text.slice(scalars[scalars.length - 1].range![1], end)
+      if (scalars.length > 1) sep = text.slice(scalars[0].range![1], scalars[1].range![0])
+    }
+    const out = all.length ? open + all.join(sep) + close : '[]'
+    return out === src ? [] : [{ start, end, text: out }]
+  }
+
+  // пустой или опустевающий блочный список правим целиком (иначе останется `proxies:` без значения)
+  if (!scalars.length || (scalars.every(drop) && !add.length && !prepend.length)) return null
+  const edits: TextEdit[] = []
+  const lineOf = (s: Scalar) => {
+    const ls = lineStartOf(text, s.range![0])
+    return { ls, le: lineEndAfter(text, s.range![1]), indent: text.slice(ls, s.range![0]) }
+  }
+  const first = lineOf(scalars[0])
+  const last = lineOf(scalars[scalars.length - 1])
+  // Порядок важен: при одинаковом start правки применяются в порядке добавления (сортировка
+  // стабильна), поэтому удаление первой строки идёт до вставки перед ней.
+  for (const s of scalars) {
+    if (!drop(s)) continue
+    const l = lineOf(s)
+    edits.push({ start: l.ls, end: l.le, text: '' })
+  }
+  if (prepend.length)
+    edits.push({ start: first.ls, end: first.ls, text: prepend.map((t) => `${first.indent}${scalarText(t, false)}\n`).join('') })
+  if (add.length) {
+    const nl = text[last.le - 1] === '\n' ? '' : '\n'
+    edits.push({ start: last.le, end: last.le, text: nl + add.map((t) => `${last.indent}${scalarText(t, false)}\n`).join('') })
+  }
+  return edits
+}
+
 /** Применяет план к config.yaml, меняя только затронутые элементы proxy-groups. */
 export function applyMihomoPlan(text: string, plan: MihomoPlan): string {
   const doc = parseDocument(text)
@@ -435,10 +522,30 @@ export function applyMihomoPlan(text: string, plan: MihomoPlan): string {
       }
       const fix = fixes.get(name)
       if (!fix) continue
+      const add = fix.add_proxies ?? []
+      const prepend = fix.prepend_proxies ?? []
+      const proxiesChanged = fix.remove_proxies.length > 0 || add.length > 0 || prepend.length > 0
+      // Меняется только список proxies — правим точечно, не переписывая остальные ключи группы.
+      if (proxiesChanged && !fix.exclude_add && !fix.exclude_remove) {
+        const seqEdits = proxiesSeqEdits(text, item.get('proxies', true), fix.remove_proxies, add, prepend)
+        if (seqEdits) {
+          edits.push(...seqEdits)
+          continue
+        }
+      }
       const clone = item.clone() as YAMLMap
-      if (fix.remove_proxies.length) {
-        const proxies = clone.get('proxies', true)
-        if (isSeq(proxies)) proxies.items = proxies.items.filter((p) => !(isScalar(p) && fix.remove_proxies.includes(String(p.value))))
+      if (proxiesChanged) {
+        const existing: unknown = clone.get('proxies', true)
+        let seq: YAMLSeq
+        if (isSeq(existing)) seq = existing
+        else {
+          seq = doc.createNode([]) as YAMLSeq
+          seq.flow = true
+          clone.set('proxies', seq)
+        }
+        seq.items = seq.items.filter((p) => !(isScalar(p) && fix.remove_proxies.includes(String(p.value))))
+        seq.items.unshift(...prepend.map((t) => new Scalar(t)))
+        seq.items.push(...add.map((t) => new Scalar(t)))
       }
       if (fix.exclude_add || fix.exclude_remove) {
         const cur = clone.get('exclude-filter')
