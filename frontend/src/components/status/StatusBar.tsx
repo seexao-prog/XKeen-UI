@@ -26,6 +26,7 @@ import {
 } from '@tabler/icons-react'
 import { useEffect, useRef, useState } from 'react'
 import { apiCall, capitalize, clashFetch } from '../../lib/api'
+import { HeaderExtras, useServiceCommands } from './HeaderExtras'
 import { ensureDnsEnabled, setDnsEnabled, DEFAULT_DNS_CONFIG } from '../configuration/mihomo/DnsPanel'
 import { syncClashApiPort, getAppState, useAppContext, bumpDnsRefresh, fetchDnsStatus, useDnsStatusStore } from '../../lib/store'
 import { cn } from '../../lib/utils'
@@ -211,6 +212,8 @@ export function StatusBar({
     onRefreshStatus()
   }
 
+  useServiceCommands({ isRunning, isPending, startService, stopService, restartService })
+
   const statusText =
     serviceStatus === 'running' ? 'Сервис запущен' : serviceStatus === 'stopped' ? 'Сервис остановлен' : pendingText || 'Загрузка...'
 
@@ -343,6 +346,7 @@ export function StatusBar({
 
           {/* Правая сторона */}
           <div className="order-3 ml-auto flex w-full items-center justify-center gap-1.5 md:w-auto md:justify-end">
+            <HeaderExtras loading={isConfigsLoading || !version} />
             {isConfigsLoading || !version ? (
               <Skeleton className="h-9 w-35.75" />
             ) : (

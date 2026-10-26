@@ -15,6 +15,7 @@ import { Fragment, memo, useCallback, useState } from 'react'
 import { apiCall } from '../../lib/api'
 import { useAppContext, useModalContext } from '../../lib/store'
 import type { AppSettings, AutoDnsMode, PingMode, ProxySortOrder, ThemeMode } from '../../lib/types'
+import { DiffPreviewField } from './settings/DiffPreviewField'
 
 type BooleanSettingKey = {
   [K in keyof AppSettings]: AppSettings[K] extends boolean ? K : never
@@ -787,6 +788,7 @@ export function SettingsModal() {
                       </SelectContent>
                     </Select>
                   </Field>
+                  <DiffPreviewField />
                   <Separator className="my-2" />
                   <p className="text-muted-foreground pt-3 pb-1 text-xs font-medium tracking-wider uppercase">Авторизация</p>
                   <AuthSettingsField authEnabled={settings.authEnabled} onToggle={toggleAuth} showToast={showToast} />

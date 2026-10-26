@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import { LoginForm } from './components/auth/Login'
+import { CommandPalette } from './components/command/CommandPalette'
 import type { CodeMirrorRef } from './components/configuration/CodeMirror'
 import { ConfigPanel } from './components/configuration/ConfigPanel'
 import { LogPanel } from './components/log/LogPanel'
@@ -561,6 +562,7 @@ function AppContent({ onLogout }: { onLogout: () => void }) {
         onImportTemplate={importTemplate}
         openModal={openModal}
       />
+      <CommandPalette openModal={openModal} />
     </div>
   )
 }
