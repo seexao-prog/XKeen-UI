@@ -9,14 +9,18 @@ mod frontend_embedder;
 mod geo;
 mod logger;
 mod healthchecker;
+mod notify;
 mod perf;
 mod provider_inspector;
 mod route_test;
+mod scheduler;
 mod settings;
 mod speedtest;
+mod subscriptions;
 mod system;
 mod types;
 mod updater;
+mod uptime;
 mod version;
 mod websocket;
 use crate::logger::{log, ts};
@@ -443,6 +447,10 @@ async fn main() {
         rci_token,
     };
     version::start_update_checker(state.clone());
+    notify::start(state.clone());
+    scheduler::start(state.clone());
+    subscriptions::start(state.clone());
+    uptime::start(state.clone());
 
     if let Some(ref _token) = state.rci_token {
         log("INFO", "RCI токен успешно загружен".into());
@@ -521,6 +529,15 @@ async fn main() {
             "/api/dns",
             get(dns::get_dns).post(dns::post_dns).delete(dns::delete_dns),
         )
+        .route("/api/notify/test", post(notify::post_notify_test))
+        .route("/api/scheduler", get(scheduler::get_scheduler))
+        .route("/api/scheduler/run", post(scheduler::post_scheduler_run))
+        .route(
+            "/api/subscriptions",
+            get(subscriptions::get_subscriptions).delete(subscriptions::delete_subscription_file),
+        )
+        .route("/api/subscriptions/update", post(subscriptions::post_subscriptions_update))
+        .route("/api/uptime", get(uptime::get_uptime))
         .route("/api/auth/logout", post(auth::post_logout))
         .route("/api/auth/reset", post(auth::post_auth_reset))
         .route("/clash/{*path}", any(api_relay::proxy_http))

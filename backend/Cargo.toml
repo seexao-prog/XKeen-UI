@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 argon2 = { version = "0.6" }
+base64 = "0.22"
 axum = { version = "0.8", features = ["ws"] }
 chrono = "0.4"
 clap = { version = "4", features = ["derive"] }

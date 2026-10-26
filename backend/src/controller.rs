@@ -275,6 +275,9 @@ pub async fn wait_mihomo_ready(start_offset: usize) -> Result<(), String> {
 }
 
 pub async fn post_control(State(state): State<AppState>, Json(req): Json<ControlReq>) -> impl IntoResponse {
+    if req.action != "start" {
+        crate::notify::mark_manual_stop();
+    }
     match req.action.as_str() {
         "switchCore" => {
             let old = state.core.read().unwrap().name.clone();

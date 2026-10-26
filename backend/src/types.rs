@@ -245,6 +245,17 @@ pub struct PluginsSettings {
     pub routers: Vec<RemoteRouter>,
 }
 
+/// Автоматизация: уведомления, расписание, подписки Xray, мониторинг аптайма.
+/// Всё выключено по умолчанию — фоновые задачи на слабом роутере просыпаются вхолостую.
+#[derive(Clone, Serialize, Deserialize, Default)]
+#[serde(default)]
+pub struct AutomationSettings {
+    pub notify: crate::notify::NotifySettings,
+    pub scheduler: crate::scheduler::SchedulerSettings,
+    pub subscriptions: crate::subscriptions::SubscriptionsSettings,
+    pub uptime: crate::uptime::UptimeSettings,
+}
+
 #[derive(Clone, Serialize, Default)]
 pub struct AppSettings {
     pub gui: GuiSettings,
@@ -254,6 +265,7 @@ pub struct AppSettings {
     pub append_config_paths: AppendConfigPaths,
     pub auth: AuthSettings,
     pub plugins: PluginsSettings,
+    pub automation: AutomationSettings,
 }
 
 impl<'de> Deserialize<'de> for AppSettings {
@@ -277,6 +289,8 @@ impl<'de> Deserialize<'de> for AppSettings {
             auth: AuthSettings,
             #[serde(default)]
             plugins: PluginsSettings,
+            #[serde(default)]
+            automation: AutomationSettings,
             #[serde(rename = "timezoneOffset")]
             legacy_tz: Option<i32>,
         }
@@ -292,6 +306,7 @@ impl<'de> Deserialize<'de> for AppSettings {
             append_config_paths: raw.append_config_paths,
             auth: raw.auth,
             plugins: raw.plugins,
+            automation: raw.automation,
         })
     }
 }
@@ -310,6 +325,39 @@ impl AppSettings {
                 }
             })
             .collect();
+    }
+
+    pub fn validate_automation(&mut self) -> Result<(), String> {
+        let a = &mut self.automation;
+        for (name, time) in [
+            ("обновления geo", &a.scheduler.geo_update.time),
+            ("перезапуска ядра", &a.scheduler.restart_core.time),
+            ("автобэкапа", &a.scheduler.backup.time),
+        ] {
+            if crate::scheduler::parse_hhmm(time).is_none() {
+                return Err(format!("Некорректное время {}: ожидается ЧЧ:ММ", name));
+            }
+        }
+        a.scheduler.backup.keep = a.scheduler.backup.keep.clamp(1, 100);
+        a.uptime.interval_minutes = a.uptime.interval_minutes.clamp(crate::uptime::MIN_INTERVAL_MIN, 1440);
+        a.notify.telegram.cooldown_minutes = a.notify.telegram.cooldown_minutes.clamp(1, 1440);
+        let mut names = std::collections::HashSet::new();
+        for sub in &mut a.subscriptions.items {
+            sub.name = sub.name.trim().to_string();
+            sub.url = sub.url.trim().to_string();
+            sub.interval_hours = sub.interval_hours.clamp(1, 24 * 7);
+            let key = crate::subscriptions::sanitize_name(&sub.name);
+            if key.is_empty() {
+                return Err("Имя подписки: нужны латинские буквы или цифры".into());
+            }
+            if !names.insert(key) {
+                return Err(format!("Подписка с именем «{}» уже есть", sub.name));
+            }
+            if !(sub.url.starts_with("http://") || sub.url.starts_with("https://")) {
+                return Err(format!("Подписка «{}»: URL должен начинаться с http(s)://", sub.name));
+            }
+        }
+        Ok(())
     }
 
     pub fn validate_plugins(&self) -> Result<(), String> {

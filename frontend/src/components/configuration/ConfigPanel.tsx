@@ -39,6 +39,7 @@ import {
   IconPencil,
   IconRefresh,
   IconRoute,
+  IconRss,
   IconSearch,
   IconTrash,
   IconX,
@@ -77,6 +78,7 @@ const GuiOutbounds = lazyLoad(() => import('./xray/GuiOutbounds'), 'GuiOutbounds
 const ConnectionsPanel = lazyLoad(() => import('./mihomo/Connections'), 'ConnectionsPanel')
 const SelectorsPanel = lazyLoad(() => import('./mihomo/Selectors'), 'SelectorsPanel')
 import { DnsPanel } from './mihomo/DnsPanel'
+const SubscriptionsModal = lazyLoad(() => import('../automation/SubscriptionsModal'), 'SubscriptionsModal')
 const CodeMirrorEditorLazy = lazyLoad(() => import('./CodeMirror'), 'CodeMirrorEditor')
 
 const BackupsModalContainer = memo(function BackupsModalContainer({ onRefreshConfigs }: { onRefreshConfigs: () => Promise<unknown> }) {
@@ -330,6 +332,8 @@ export function ConfigPanel({
   const activeClashApiUnix = isRunning ? clashApiUnix : null
 
   const isCoreMihomo = currentCore === 'mihomo'
+  const [showSubscriptions, setShowSubscriptions] = useState(false)
+  const mountSubscriptions = useLazyMount(showSubscriptions)
 
   useConnectionsSync(isCoreMihomo ? activeClashApiPort : null, clashApiSecret, serviceStatus, activeClashApiUnix)
 
@@ -1257,6 +1261,11 @@ export function ConfigPanel({
                           <DropdownMenuItem onClick={onOpenRouteTest}>
                             <IconRoute /> Проверка маршрута
                           </DropdownMenuItem>
+                          {!isCoreMihomo && (
+                            <DropdownMenuItem onClick={() => setShowSubscriptions(true)}>
+                              <IconRss /> Подписки
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
                         <DropdownMenuGroup>
@@ -1319,6 +1328,11 @@ export function ConfigPanel({
           />
         )}
         <BackupsModalContainer onRefreshConfigs={refreshConfigsAndEditor} />
+        {mountSubscriptions && !isCoreMihomo && (
+          <LazyBoundary>
+            <SubscriptionsModal open={showSubscriptions} onOpenChange={setShowSubscriptions} onChanged={() => void refreshConfigsAndEditor()} />
+          </LazyBoundary>
+        )}
         {massConfirm && (
           <MassConfirmDialog
             open={!!massConfirm}

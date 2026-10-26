@@ -1,0 +1,175 @@
+name: Sync with upstream
+
+# Раз в сутки подтягивает zxc-rv/XKeen-UI@main в ветку vercel-theme форка.
+# - Конфликт слияния → не пушим, создаём/обновляем issue и падаем.
+# - Есть новые коммиты и слияние прошло → push + запуск сборки релиза (build-rust.yml).
+#
+# Версия форка: upstream X.Y.Z → X.Y.(Z*100+n), n — следующий номер сборки форка для этого
+# upstream-релиза (1, 2, 3…). Так наша версия всегда выше оригинала и монотонно растёт
+# (1.4.1 → 1.4.101, 1.4.102…; upstream 1.4.2 → 1.4.201; upstream 1.5.0 → 1.5.1).
+#
+# ВАЖНО: GITHUB_TOKEN не может пушить изменения в .github/workflows/*. Если upstream меняет
+# воркфлоу, добавьте секрет SYNC_TOKEN (PAT с правами repo + workflow) — он будет
+# использован для checkout/push. Cron срабатывает только на default-ветке репозитория,
+# поэтому vercel-theme должна быть default-веткой форка.
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+    inputs:
+      force_release:
+        description: 'Собрать релиз, даже если новых коммитов из upstream нет'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  actions: write
+  issues: write
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+
+env:
+  UPSTREAM_REPO: zxc-rv/XKeen-UI
+  UPSTREAM_BRANCH: main
+  FORK_BRANCH: vercel-theme
+  CONFLICT_ISSUE_TITLE: 'Синхронизация с upstream: конфликт слияния'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.FORK_BRANCH }}
+          fetch-depth: 0
+          token: ${{ secrets.SYNC_TOKEN || github.token }}
+
+      - name: Configure git
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream "https://github.com/${UPSTREAM_REPO}.git"
+          git fetch --no-tags upstream "${UPSTREAM_BRANCH}"
+
+      - name: Merge
+        id: merge
+        run: |
+          behind=$(git rev-list --count "HEAD..upstream/${UPSTREAM_BRANCH}")
+          echo "behind=${behind}" >> "$GITHUB_OUTPUT"
+          echo "Новых коммитов в upstream: ${behind}"
+          if [ "$behind" -eq 0 ]; then
+            echo "merged=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git merge --no-edit -m "Merge ${UPSTREAM_REPO}@${UPSTREAM_BRANCH} into ${FORK_BRANCH}" "upstream/${UPSTREAM_BRANCH}"; then
+            echo "merged=true" >> "$GITHUB_OUTPUT"
+            echo "conflict=false" >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo 'files<<EOF'
+              git diff --name-only --diff-filter=U
+              echo 'EOF'
+            } >> "$GITHUB_OUTPUT"
+            git merge --abort
+            echo "conflict=true" >> "$GITHUB_OUTPUT"
+            echo "merged=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Report conflict
+        if: steps.merge.outputs.conflict == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FILES: ${{ steps.merge.outputs.files }}
+        run: |
+          upstream_sha=$(git rev-parse --short "upstream/${UPSTREAM_BRANCH}")
+          file_list=''
+          while IFS= read -r f; do
+            [ -n "$f" ] && file_list+="- \`${f}\`"$'\n'
+          done <<< "$FILES"
+          body=$(cat <<EOF
+          Автоматическое слияние \`${UPSTREAM_REPO}@${UPSTREAM_BRANCH}\` (${upstream_sha}) в \`${FORK_BRANCH}\` не удалось — конфликты:
+
+          ${file_list}
+
+          Как решить вручную:
+          \`\`\`sh
+          git checkout ${FORK_BRANCH}
+          git fetch https://github.com/${UPSTREAM_REPO}.git ${UPSTREAM_BRANCH}
+          git merge FETCH_HEAD   # разрешить конфликты, закоммитить
+          git push origin ${FORK_BRANCH}
+          \`\`\`
+          Затем перезапустите workflow «Sync with upstream» (force_release) — соберётся релиз.
+
+          Запуск: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+          EOF
+          )
+          number=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"${CONFLICT_ISSUE_TITLE}\" in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --repo "$GITHUB_REPOSITORY" --body "$body"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$CONFLICT_ISSUE_TITLE" --body "$body"
+          fi
+          echo "::error::Конфликт слияния с upstream: $(printf '%s' "$FILES" | tr '\n' ' ')"
+          exit 1
+
+      - name: Push
+        if: steps.merge.outputs.merged == 'true'
+        run: git push origin "HEAD:${FORK_BRANCH}"
+
+      - name: Close resolved conflict issue
+        if: steps.merge.outputs.merged == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          number=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"${CONFLICT_ISSUE_TITLE}\" in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            gh issue close "$number" --repo "$GITHUB_REPOSITORY" --comment "Слияние прошло автоматически, закрываю."
+          fi
+
+      - name: Compute version
+        id: version
+        if: steps.merge.outputs.merged == 'true' || inputs.force_release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          up_tag=$(gh api "repos/${UPSTREAM_REPO}/releases/latest" --jq .tag_name)
+          up=${up_tag#v}
+          up=${up%%-*}
+          IFS=. read -r X Y Z <<< "$up"
+          if ! [[ "$X" =~ ^[0-9]+$ && "$Y" =~ ^[0-9]+$ && "$Z" =~ ^[0-9]+$ ]]; then
+            echo "::error::Не удалось разобрать тег upstream: ${up_tag}"
+            exit 1
+          fi
+          base=$((Z * 100))
+          # Сборки форка для upstream X.Y.Z — патчи [Z*100+1, Z*100+99]; n начинается с 1, чтобы
+          # даже при Z=0 версия форка была строго выше оригинала (1.5.0 → 1.5.1).
+          last=$base
+          for t in $(git ls-remote --tags --refs origin "refs/tags/v${X}.${Y}.*" | sed 's|.*refs/tags/||'); do
+            p=${t#"v${X}.${Y}."}
+            [[ "$p" =~ ^[0-9]+$ ]] || continue
+            if (( p > base && p < base + 100 && p > last )); then last=$p; fi
+          done
+          next=$((last + 1))
+          if (( next >= base + 100 )); then
+            echo "::error::Исчерпан диапазон сборок форка для upstream ${up_tag}"
+            exit 1
+          fi
+          version="v${X}.${Y}.${next}"
+          echo "Upstream ${up_tag} → версия форка ${version}"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger release build
+        if: steps.version.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Push токеном GITHUB_TOKEN не запускает другие workflow — запускаем сборку явно.
+          gh workflow run build-rust.yml --repo "$GITHUB_REPOSITORY" --ref "${FORK_BRANCH}" -f "version=${{ steps.version.outputs.version }}"
+          echo "Запущена сборка ${{ steps.version.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"

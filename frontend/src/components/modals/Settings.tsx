@@ -15,6 +15,7 @@ import { Fragment, memo, useCallback, useState } from 'react'
 import { apiCall } from '../../lib/api'
 import { useAppContext, useModalContext } from '../../lib/store'
 import type { AppSettings, AutoDnsMode, PingMode, ProxySortOrder, ThemeMode } from '../../lib/types'
+import { AutomationSettingsTab } from '../automation/AutomationSettings'
 import { DiffPreviewField } from './settings/DiffPreviewField'
 
 type BooleanSettingKey = {
@@ -756,6 +757,7 @@ export function SettingsModal() {
               <TabsTrigger value="clash-api">Mihomo</TabsTrigger>
               <TabsTrigger value="updates">Обновления</TabsTrigger>
               <TabsTrigger value="plugins">Плагины</TabsTrigger>
+              <TabsTrigger value="automation">Автоматизация</TabsTrigger>
             </TabsList>
           </div>
 
@@ -1042,6 +1044,10 @@ export function SettingsModal() {
                     </Fragment>
                   ))}
                 </FieldGroup>
+              </TabsContent>
+
+              <TabsContent value="automation">
+                <AutomationSettingsTab />
               </TabsContent>
             </div>
           </ScrollArea>

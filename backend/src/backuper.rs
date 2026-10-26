@@ -331,6 +331,45 @@ fn rename_backup_sync(name: &str, new_name: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// Метка автобэкапов планировщика в имени файла: ротация удаляет только их, ручные не трогает.
+pub const AUTO_BACKUP_MARK: &str = "_auto_";
+
+/// Автобэкап: обычный бэкап с меткой `_auto_` + ротация — остаются `keep` самых свежих
+/// автобэкапов. Возвращает имя созданного файла.
+pub fn create_auto_backup_sync(tz: i32, keep: usize) -> Result<String, String> {
+    let item = create_backup_sync(tz)?;
+    let auto_name = auto_backup_name(&item.name);
+    let dir = Path::new(BACKUP_DIR);
+    fs::rename(dir.join(&item.name), dir.join(&auto_name)).map_err(io_error)?;
+
+    let mut autos: Vec<(SystemTime, PathBuf)> = fs::read_dir(dir)
+        .map_err(io_error)?
+        .flatten()
+        .map(|e| e.path())
+        .filter(|p| is_tar_file(p) && p.file_name().and_then(|n| n.to_str()).is_some_and(is_auto_backup_name))
+        .map(|p| (fs::metadata(&p).and_then(|m| m.modified()).unwrap_or(SystemTime::UNIX_EPOCH), p))
+        .collect();
+    autos.sort_by(|a, b| b.0.cmp(&a.0).then_with(|| b.1.cmp(&a.1)));
+    for (_, old) in autos.into_iter().skip(keep.max(1)) {
+        match fs::remove_file(&old) {
+            Ok(()) => log("INFO", format!("Удалён старый автобэкап: {}", old.display())),
+            Err(e) => log("WARN", format!("Не удалось удалить {}: {}", old.display(), e)),
+        }
+    }
+    Ok(auto_name)
+}
+
+fn auto_backup_name(name: &str) -> String {
+    match name.strip_suffix(BACKUP_SUFFIX) {
+        Some(base) => format!("{}{AUTO_BACKUP_MARK}{BACKUP_SUFFIX}", base.trim_end_matches('_')),
+        None => name.to_string(),
+    }
+}
+
+fn is_auto_backup_name(name: &str) -> bool {
+    name.ends_with(&format!("{AUTO_BACKUP_MARK}{BACKUP_SUFFIX}"))
+}
+
 fn ensure_backup_dir() -> io::Result<()> {
     fs::create_dir_all(BACKUP_DIR)
 }
@@ -634,4 +673,19 @@ fn backup_now(tz: i32) -> DateTime<FixedOffset> {
 
 fn backup_offset(tz: i32) -> FixedOffset {
     FixedOffset::east_opt(tz.clamp(-12, 14) * 3600).unwrap()
+}
+
+#[cfg(test)]
+mod auto_backup_tests {
+    use super::*;
+
+    #[test]
+    fn auto_name_is_marked_and_still_a_backup() {
+        let auto = auto_backup_name("2026-10-26_04-00-00_xkeen-ui.tar");
+        assert_eq!(auto, "2026-10-26_04-00-00_auto_xkeen-ui.tar");
+        assert!(is_backup_name(Some(&auto)));
+        assert!(is_auto_backup_name(&auto));
+        assert!(!is_auto_backup_name("2026-10-26_04-00-00_xkeen-ui.tar"));
+        assert!(!is_auto_backup_name("2026-10-26_04-00-00_2_xkeen-ui.tar"));
+    }
 }
