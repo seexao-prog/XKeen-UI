@@ -14,14 +14,21 @@ import {
 import { showToast, useAppActions, useAppContext, useCurrentCore, useSettings } from '@/lib/store'
 import { useUiPrefs } from '@/lib/uiPrefs'
 import { cn } from '@/lib/utils'
+import { openQuickRules } from '@/lib/quickRules'
 import {
+  IconActivity,
   IconArrowsExchange,
+  IconArrowsSplit2,
+  IconBolt,
   IconCheck,
   IconCloudDownload,
   IconCpu,
+  IconDevices,
   IconFileDiff,
+  IconGauge,
   IconSearch,
   IconSettings,
+  IconStack2,
 } from '@tabler/icons-react'
 import { Command } from 'cmdk'
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
@@ -110,7 +117,7 @@ export function CommandPalette({ openModal }: Props) {
     >
       <DialogContent
         showCloseButton={false}
-        className="top-[12dvh] translate-y-0 gap-0 overflow-hidden p-0 sm:max-w-[640px] data-closed:zoom-out-[0.98] data-open:zoom-in-[0.98]"
+        className="data-closed:zoom-out-[0.98] data-open:zoom-in-[0.98] top-[12dvh] translate-y-0 gap-0 overflow-hidden p-0 sm:max-w-[640px]"
       >
         <DialogTitle className="sr-only">Командная палитра</DialogTitle>
         <DialogDescription className="sr-only">Поиск команд и действий</DialogDescription>
@@ -133,7 +140,7 @@ export function CommandPalette({ openModal }: Props) {
             />
             <Kbd className="hidden sm:inline-flex">Esc</Kbd>
           </div>
-          <Command.List className="max-h-[min(60dvh,440px)] scroll-py-2 overflow-y-auto overscroll-contain p-2 [scrollbar-width:thin]">
+          <Command.List className="max-h-[min(60dvh,440px)] scroll-py-2 [scrollbar-width:thin] overflow-y-auto overscroll-contain p-2">
             <Command.Empty className="text-muted-foreground py-10 text-center text-sm">Ничего не найдено</Command.Empty>
             <PaletteItems onRun={run} />
           </Command.List>
@@ -242,6 +249,56 @@ function useAppCommandProvider(openModal: (modal: string) => void) {
         dispatch({ type: 'SET_UPDATE_MODAL_CORE', core: currentCore || 'xray' })
         openModal('showUpdateModal')
       },
+    },
+    {
+      id: 'tools.quickRules',
+      title: 'Маршрутизация доменов',
+      group: 'Утилиты',
+      keywords: ['domain', 'routing', 'rules', 'домен', 'правила', 'напрямую', 'исключение', 'direct'],
+      icon: IconArrowsSplit2,
+      run: () => openQuickRules(),
+    },
+    {
+      id: 'tools.proxyGroups',
+      title: 'Группы прокси',
+      group: 'Утилиты',
+      keywords: ['groups', 'balancer', 'балансировщик', 'группа', 'серверы'],
+      icon: IconStack2,
+      run: () => openModal('showProxyGroupsModal'),
+    },
+    {
+      id: 'tools.devices',
+      title: 'Устройства и прокси',
+      group: 'Утилиты',
+      keywords: ['devices', 'policy', 'устройства', 'политика', 'напрямую', 'исключить'],
+      icon: IconDevices,
+      run: () => openModal('showDevicesModal'),
+    },
+    {
+      id: 'tools.perf',
+      title: 'Нагрузка роутера',
+      group: 'Утилиты',
+      keywords: ['cpu', 'ram', 'load', 'нагрузка', 'процессор', 'монитор'],
+      icon: IconActivity,
+      run: () => openModal('showPerfModal'),
+    },
+    {
+      id: 'tools.speedtest',
+      title: 'Спидтест',
+      group: 'Утилиты',
+      keywords: ['speedtest', 'speed', 'скорость', 'тест'],
+      icon: IconBolt,
+      run: () => openModal('showSpeedtestModal'),
+    },
+    {
+      id: 'tools.advisor',
+      title: 'Анализ конфига xray',
+      group: 'Утилиты',
+      keywords: ['advisor', 'quic', 'vision', 'mux', 'анализ', 'оптимизация', 'скорость'],
+      icon: IconGauge,
+      disabled: currentCore === 'mihomo',
+      disabledReason: 'Анализ доступен только для Xray',
+      run: () => openModal('showAdvisorModal'),
     },
     ...THEME_OPTIONS.map(({ value, label, icon }) => ({
       id: `theme.${value}`,
