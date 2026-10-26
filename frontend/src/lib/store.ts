@@ -79,6 +79,7 @@ const initialState: AppState = {
   showPerfModal: false,
   showSpeedtestModal: false,
   showAdvisorModal: false,
+  showQuickRulesModal: false,
   updateModalCore: '',
   toasts: [],
   pendingSaveAction: null,
@@ -177,6 +178,7 @@ type CoreState = Omit<
   | 'showPerfModal'
   | 'showSpeedtestModal'
   | 'showAdvisorModal'
+  | 'showQuickRulesModal'
   | 'updateModalCore'
   | 'pendingSaveAction'
   | 'toasts'
@@ -203,6 +205,7 @@ type ModalState = Pick<
   | 'showPerfModal'
   | 'showSpeedtestModal'
   | 'showAdvisorModal'
+  | 'showQuickRulesModal'
   | 'updateModalCore'
   | 'pendingSaveAction'
 >
@@ -316,6 +319,7 @@ export function useModalContext() {
       showPerfModal: s.showPerfModal,
       showSpeedtestModal: s.showSpeedtestModal,
       showAdvisorModal: s.showAdvisorModal,
+      showQuickRulesModal: s.showQuickRulesModal,
       updateModalCore: s.updateModalCore,
       pendingSaveAction: s.pendingSaveAction,
     }))

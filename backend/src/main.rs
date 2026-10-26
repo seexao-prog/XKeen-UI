@@ -12,6 +12,7 @@ mod healthchecker;
 mod notify;
 mod perf;
 mod provider_inspector;
+mod quick_rules;
 mod route_test;
 mod scheduler;
 mod settings;
@@ -521,6 +522,10 @@ async fn main() {
         .route("/api/devices/proxy", post(devices::post_device_proxy))
         .route("/api/perf", get(perf::get_perf))
         .route("/api/speedtest", post(speedtest::post_speedtest))
+        .route(
+            "/api/quick-rules",
+            get(quick_rules::get_quick_rules).put(quick_rules::put_quick_rules),
+        )
         .route("/api/update", post(updater::post_update))
         .route("/api/geo", get(geo::get_geo))
         .route("/api/geo/site", get(geo::get_geosite))

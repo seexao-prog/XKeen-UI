@@ -21,6 +21,7 @@ import { memo, useCallback, useEffect, useRef, useState, type ReactNode } from '
 import { create } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { apiCall, clashFetch } from '../../../lib/api'
+import { openQuickRules } from '../../../lib/quickRules'
 import { getConnections, subscribeConnections, useNowStore, useProxiesStore, useSettings, useWsConnected } from '../../../lib/store'
 interface ConnectionMetadata {
   network: string
@@ -848,7 +849,12 @@ const ConnectionDialog = memo(function ConnectionDialog({
         </div>
 
         {renderedConn && (
-          <div>
+          <div className="flex flex-col gap-2">
+            {getConnectionHost(renderedConn) && (
+              <Button variant="outline" className="w-full" onClick={() => openQuickRules(getConnectionHost(renderedConn))}>
+                Направить домен…
+              </Button>
+            )}
             <Button
               variant="destructive"
               className="w-full"

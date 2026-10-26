@@ -40,6 +40,7 @@ import {
   IconRefresh,
   IconRoute,
   IconRss,
+  IconArrowsSplit2,
   IconSearch,
   IconTrash,
   IconX,
@@ -62,6 +63,7 @@ import type { Config } from '../../lib/types'
 import { cn } from '../../lib/utils'
 import { parse as parseJsonc } from 'jsonc-parser'
 import { MassConfirmDialog } from '../log/multi-routers/MassConfirmDialog'
+import { openQuickRules } from '../../lib/quickRules'
 import { BackupsModal } from '../modals/Backups'
 import { ProvidersModal } from '../modals/Providers'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from '../ui/context-menu'
@@ -1260,6 +1262,9 @@ export function ConfigPanel({
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={onOpenRouteTest}>
                             <IconRoute /> Проверка маршрута
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openQuickRules()}>
+                            <IconArrowsSplit2 /> Маршрутизация доменов
                           </DropdownMenuItem>
                           {!isCoreMihomo && (
                             <DropdownMenuItem onClick={() => setShowSubscriptions(true)}>

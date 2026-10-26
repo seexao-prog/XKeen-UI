@@ -397,6 +397,13 @@ async fn validate_core(files: &[ConfigReq]) -> Result<(), String> {
     Err(combined)
 }
 
+/// Валидация произвольного набора xray-файлов (полный путь, содержимое) — для модулей,
+/// которые генерируют конфигурацию сами (быстрые правила).
+pub async fn validate_xray_files(files: Vec<(String, String)>) -> Result<(), String> {
+    let files: Vec<ConfigReq> = files.into_iter().map(|(file, content)| ConfigReq { file, content }).collect();
+    validate_core(&files).await
+}
+
 /// Проверка всего набора конфигов Xray из `XRAY_CONF_DIR`, где `file` заменён (или добавлен)
 /// содержимым `content`, а при `None` — исключён из набора. Та же логика, что у
 /// `put_config?validate=xray` (используют подписки).
@@ -540,9 +547,9 @@ fn parse_mihomo_api_creds(yaml_content: &str) -> MihomoApiCreds {
     creds
 }
 
-const HOT_RELOAD_UNAVAILABLE: &str = "Hot reload unavailable";
+pub const HOT_RELOAD_UNAVAILABLE: &str = "Hot reload unavailable";
 
-async fn apply_mihomo_hot_reload(
+pub async fn apply_mihomo_hot_reload(
     state: &AppState, file: &str, content: &str, close_conns: bool,
 ) -> Json<ApiResponse<()>> {
     let main_config = format!("{}/config.yaml", MIHOMO_CONF_DIR);

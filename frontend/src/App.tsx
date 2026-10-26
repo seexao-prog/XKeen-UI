@@ -13,6 +13,7 @@ import { DevicesModal } from './components/modals/Devices'
 import { GeoScanModal } from './components/modals/GeoScan'
 import { ImportAmneziaModal } from './components/modals/ImportAmnezia'
 import { PerformanceModal } from './components/modals/Performance'
+import { QuickRulesModal } from './components/modals/QuickRules'
 import { RouteTesterModal } from './components/modals/RouteTester'
 import { SettingsModal } from './components/modals/Settings'
 import { SpeedtestModal } from './components/modals/Speedtest'
@@ -96,6 +97,7 @@ const ModalManager = memo(function ModalManager({
   const mountPerf = useLazyMount(modals.showPerfModal)
   const mountSpeedtest = useLazyMount(modals.showSpeedtestModal)
   const mountAdvisor = useLazyMount(modals.showAdvisorModal)
+  const mountQuickRules = useLazyMount(modals.showQuickRulesModal)
 
   return (
     <>
@@ -120,6 +122,7 @@ const ModalManager = memo(function ModalManager({
       {mountPerf && <PerformanceModal />}
       {mountSpeedtest && <SpeedtestModal />}
       {mountAdvisor && <ConfigAdvisorModal />}
+      {mountQuickRules && <QuickRulesModal />}
     </>
   )
 })
