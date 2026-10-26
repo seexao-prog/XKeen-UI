@@ -9,6 +9,7 @@ mod geo;
 mod logger;
 mod healthchecker;
 mod provider_inspector;
+mod proxy_groups;
 mod route_test;
 mod settings;
 mod system;
@@ -505,6 +506,12 @@ async fn main() {
             get(healthchecker::get_healthcheck).post(healthchecker::post_healthcheck),
         )
         .route("/api/healthcheck/all", post(healthchecker::post_healthcheck_all))
+        .route(
+            "/api/proxy-groups",
+            get(proxy_groups::get_groups).put(proxy_groups::put_groups),
+        )
+        .route("/api/proxy-groups/preview", post(proxy_groups::post_preview))
+        .route("/api/proxy-groups/status", get(proxy_groups::get_status))
         .route("/api/device-list", get(api_relay::get_device_list))
         .route("/api/update", post(updater::post_update))
         .route("/api/geo", get(geo::get_geo))

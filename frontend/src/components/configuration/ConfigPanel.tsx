@@ -36,6 +36,7 @@ import {
   IconRefresh,
   IconRoute,
   IconSearch,
+  IconStack2,
   IconTrash,
   IconX,
 } from '@tabler/icons-react'
@@ -100,6 +101,7 @@ interface Props {
   onOpenTemplate: () => void
   onOpenGeoScan: () => void
   onOpenRouteTest: () => void
+  onOpenProxyGroups?: () => void
   onOpenBackups: () => void
   onRefreshConfigs: () => Promise<Config[]>
   editorRef: React.RefObject<CodeMirrorRef | null>
@@ -297,6 +299,7 @@ export function ConfigPanel({
   onOpenTemplate,
   onOpenGeoScan,
   onOpenRouteTest,
+  onOpenProxyGroups,
   onOpenBackups,
   onRefreshConfigs,
   editorRef,
@@ -1183,6 +1186,11 @@ export function ConfigPanel({
                           <DropdownMenuItem onClick={onOpenRouteTest}>
                             <IconRoute /> Проверка маршрута
                           </DropdownMenuItem>
+                          {onOpenProxyGroups && (
+                            <DropdownMenuItem onClick={onOpenProxyGroups}>
+                              <IconStack2 /> Группы прокси
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
                         {isMobile ? (

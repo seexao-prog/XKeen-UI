@@ -75,6 +75,7 @@ const initialState: AppState = {
   showGeoScanModal: false,
   showRouteTestModal: false,
   showBackupsModal: false,
+  showProxyGroupsModal: false,
   updateModalCore: '',
   toasts: [],
   pendingSaveAction: null,
@@ -168,6 +169,7 @@ type CoreState = Omit<
   | 'showGeoScanModal'
   | 'showRouteTestModal'
   | 'showBackupsModal'
+  | 'showProxyGroupsModal'
   | 'showImportAmneziaModal'
   | 'updateModalCore'
   | 'pendingSaveAction'
@@ -191,6 +193,7 @@ type ModalState = Pick<
   | 'showGeoScanModal'
   | 'showRouteTestModal'
   | 'showBackupsModal'
+  | 'showProxyGroupsModal'
   | 'updateModalCore'
   | 'pendingSaveAction'
 >
@@ -299,7 +302,8 @@ export function useModalContext() {
       showCommentsWarningModal: s.showCommentsWarningModal,
       showGeoScanModal: s.showGeoScanModal,
       showRouteTestModal: s.showRouteTestModal,
-      showBackupsModal: s.showBackupsModal,
+    showBackupsModal: s.showBackupsModal,
+    showProxyGroupsModal: s.showProxyGroupsModal,
       updateModalCore: s.updateModalCore,
       pendingSaveAction: s.pendingSaveAction,
     }))
