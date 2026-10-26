@@ -60,6 +60,7 @@ import {
   useModalContext,
   useSettings,
 } from '../../lib/store'
+import { moveGroupToFolder, saveSelectorFolders } from '../../lib/selectorFolders'
 import type { Config } from '../../lib/types'
 import { cn } from '../../lib/utils'
 
@@ -477,6 +478,8 @@ function SetupFlow(props: {
   const panelGroups = inv.groups.filter((g) => g.panel)
   const [extras, setExtras] = useState<string[]>([])
   const [insertBefore, setInsertBefore] = useState(() => defaultInsertIndex(inv.rules))
+  const selectorFolders = useSettings((s) => s.selectorFolders)
+  const [folderId, setFolderId] = useState('__none')
 
   const [iconMode, setIconMode] = useState<IconMode>('auto')
   const [icons, setIcons] = useState<string[] | null>(null)
@@ -572,6 +575,11 @@ function SetupFlow(props: {
           fetchClashProxies(st.clashApiPort ?? '', st.clashApiSecret, true, st.clashApiUnix),
           fetchClashRuleProviders(st.clashApiPort ?? '', st.clashApiSecret, st.clashApiUnix),
         ]).catch(() => undefined)
+      }
+      if (mode === 'new' && folderId !== '__none') {
+        const folders = getAppState().settings.selectorFolders
+        const err = await saveSelectorFolders(moveGroupToFolder(folders, name.trim(), folderId))
+        if (err) showToast(`Селектор создан, но не добавлен в папку: ${err}`, 'warning')
       }
       props.onDone()
     } catch (e) {
@@ -811,6 +819,29 @@ function SetupFlow(props: {
                 </div>
                 <Switch checked={excludeRu} onCheckedChange={setExcludeRu} />
               </label>
+
+              <Field label="Папка в панели (необязательно)">
+                <Select value={folderId} onValueChange={(v) => setFolderId(String(v))}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue>
+                      {folderId === '__none' ? 'Без папки' : (selectorFolders.find((f) => f.id === folderId)?.name ?? 'Без папки')}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent position="popper">
+                    <SelectItem value="__none">Без папки</SelectItem>
+                    {selectorFolders.map((f) => (
+                      <SelectItem key={f.id} value={f.id}>
+                        {f.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span className="text-muted-foreground text-xs">
+                  {selectorFolders.length
+                    ? 'Только вид панели: новый селектор покажется внутри выбранной папки, конфиг не меняется'
+                    : 'Папок пока нет — создать их можно кнопкой «Папки» в панели селекторов'}
+                </span>
+              </Field>
 
               {panelGroups.length > 0 && (
                 <div className="flex flex-col gap-1.5 rounded-lg border px-3 py-2.5">

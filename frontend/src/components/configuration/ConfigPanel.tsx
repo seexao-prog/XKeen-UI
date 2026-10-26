@@ -42,6 +42,7 @@ import {
   IconRss,
   IconArrowsSplit2,
   IconBooks,
+  IconFolder,
   IconSearch,
   IconStack2,
   IconTrash,
@@ -67,6 +68,7 @@ import { parse as parseJsonc } from 'jsonc-parser'
 import { MassConfirmDialog } from '../log/multi-routers/MassConfirmDialog'
 import { openQuickRules } from '../../lib/quickRules'
 import { openRuleCatalog } from '../modals/RuleCatalog'
+import { openSelectorFoldersModal } from '../../lib/selectorFolders'
 import { BackupsModal } from '../modals/Backups'
 import { ProvidersModal } from '../modals/Providers'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from '../ui/context-menu'
@@ -989,6 +991,10 @@ export function ConfigPanel({
                 <Button variant="outline" className="text-[13px]" onClick={() => openRuleCatalog()}>
                   <IconBooks data-icon="inline-start" />
                   Каталог
+                </Button>
+                <Button variant="outline" className="text-[13px]" onClick={() => openSelectorFoldersModal()}>
+                  <IconFolder data-icon="inline-start" />
+                  Папки
                 </Button>
                 <Tooltip>
                   <TooltipTrigger

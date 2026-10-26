@@ -15,6 +15,7 @@ import { ImportAmneziaModal } from './components/modals/ImportAmnezia'
 import { PerformanceModal } from './components/modals/Performance'
 import { ProxyGroupsModal } from './components/modals/ProxyGroups'
 import { RuleCatalogModal } from './components/modals/RuleCatalog'
+import { SelectorFoldersModal } from './components/modals/SelectorFolders'
 import { QuickRulesModal } from './components/modals/QuickRules'
 import { RouteTesterModal } from './components/modals/RouteTester'
 import { SettingsModal } from './components/modals/Settings'
@@ -51,6 +52,7 @@ import {
 } from './lib/types'
 import { parseClashApiCredentials } from './lib/utils'
 import { parse as parseJsonc } from 'jsonc-parser'
+import { normalizeSelectorFolders } from './lib/selectorFolders'
 
 function useThemeMode(theme: ThemeMode) {
   useEffect(() => {
@@ -104,6 +106,7 @@ const ModalManager = memo(function ModalManager({
   const mountQuickRules = useLazyMount(modals.showQuickRulesModal)
   const mountProxyGroups = useLazyMount(modals.showProxyGroupsModal)
   const mountRuleCatalog = useLazyMount(modals.showRuleCatalogModal)
+  const mountSelectorFolders = useLazyMount(modals.showSelectorFoldersModal)
 
   return (
     <>
@@ -131,6 +134,7 @@ const ModalManager = memo(function ModalManager({
       {mountQuickRules && <QuickRulesModal />}
       {mountProxyGroups && <ProxyGroupsModal onApplied={onConfigsChanged} />}
       {mountRuleCatalog && <RuleCatalogModal />}
+      {mountSelectorFolders && <SelectorFoldersModal />}
     </>
   )
 })
@@ -286,6 +290,7 @@ function AppContent({ onLogout }: { onLogout: () => void }) {
             timezone: data.log.timezone,
             authEnabled: !!data.auth?.enabled,
             multiRouter: data.plugins?.multi_router ?? false,
+            selectorFolders: normalizeSelectorFolders(data.ui?.selector_folders),
           },
         })
         if (Array.isArray(data.plugins?.routers)) {

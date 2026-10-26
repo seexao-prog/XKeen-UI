@@ -42,6 +42,17 @@ export interface AppSettings {
   timezone: number
   authEnabled: boolean
   multiRouter: boolean
+  /** Папки селекторов mihomo (визуальная группировка), `ui.selector_folders` в /api/settings */
+  selectorFolders: SelectorFolder[]
+}
+
+export interface SelectorFolder {
+  id: string
+  name: string
+  /** URL иконки или пусто */
+  icon: string
+  /** Имена групп mihomo в порядке отображения */
+  groups: string[]
 }
 
 export interface ProxySubscriptionInfo {
@@ -160,6 +171,7 @@ export interface AppState {
   showQuickRulesModal: boolean
   showProxyGroupsModal: boolean
   showRuleCatalogModal: boolean
+  showSelectorFoldersModal: boolean
   updateModalCore: string
   toasts: ToastMessage[]
   pendingSaveAction: (() => void) | null
@@ -204,6 +216,7 @@ export type AppAction =
         | 'showQuickRulesModal'
         | 'showProxyGroupsModal'
         | 'showRuleCatalogModal'
+        | 'showSelectorFoldersModal'
       >
       show: boolean
     }

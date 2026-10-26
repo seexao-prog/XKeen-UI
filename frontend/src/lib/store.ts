@@ -45,6 +45,7 @@ const initialSettings: AppSettings = {
   timezone: 0,
   authEnabled: false,
   multiRouter: false,
+  selectorFolders: [],
 }
 
 const initialState: AppState = {
@@ -82,6 +83,7 @@ const initialState: AppState = {
   showQuickRulesModal: false,
   showProxyGroupsModal: false,
   showRuleCatalogModal: false,
+  showSelectorFoldersModal: false,
   updateModalCore: '',
   toasts: [],
   pendingSaveAction: null,
@@ -177,6 +179,7 @@ type CoreState = Omit<
   | 'showBackupsModal'
   | 'showProxyGroupsModal'
   | 'showRuleCatalogModal'
+  | 'showSelectorFoldersModal'
   | 'showImportAmneziaModal'
   | 'showDevicesModal'
   | 'showPerfModal'
@@ -212,6 +215,7 @@ type ModalState = Pick<
   | 'showQuickRulesModal'
   | 'showProxyGroupsModal'
   | 'showRuleCatalogModal'
+  | 'showSelectorFoldersModal'
   | 'updateModalCore'
   | 'pendingSaveAction'
 >
@@ -328,6 +332,7 @@ export function useModalContext() {
       showQuickRulesModal: s.showQuickRulesModal,
       showProxyGroupsModal: s.showProxyGroupsModal,
       showRuleCatalogModal: s.showRuleCatalogModal,
+      showSelectorFoldersModal: s.showSelectorFoldersModal,
       updateModalCore: s.updateModalCore,
       pendingSaveAction: s.pendingSaveAction,
     }))

@@ -12,6 +12,7 @@ import {
   IconChevronDown,
   IconChevronUp,
   IconCircleArrowRightFilled,
+  IconFolderSymlink,
   IconLoader2,
   IconLock,
   IconPlugX,
@@ -23,7 +24,9 @@ import { create } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { clashFetch } from '../../../lib/api'
 import { fetchClashProxies, selectClashProxy, showToast, useProxiesStore, useSettings } from '../../../lib/store'
-import { DEFAULT_PING_TEST_TIMEOUT, DEFAULT_PING_TEST_URL } from '../../../lib/types'
+import { layoutSelectors, openSelectorFoldersModal, useFolderCollapse } from '../../../lib/selectorFolders'
+import { DEFAULT_PING_TEST_TIMEOUT, DEFAULT_PING_TEST_URL, type SelectorFolder } from '../../../lib/types'
+import { FolderIcon } from '../../modals/SelectorFolders'
 
 interface ProxyHistory {
   time: string
@@ -761,6 +764,22 @@ const SelectorRow = memo(function SelectorRow({
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    size="icon-sm"
+                    aria-label="Переместить в папку"
+                    onMouseDown={blurActiveElement}
+                    onClick={() => openSelectorFoldersModal(selectorName)}
+                  >
+                    <IconFolderSymlink size={13} />
+                  </Button>
+                }
+              />
+              <TooltipContent>Переместить в папку…</TooltipContent>
+            </Tooltip>
             {isSmart && (
               <Popover open={flushConfirmOpen} onOpenChange={setFlushConfirmOpen}>
                 <Tooltip>
@@ -886,12 +905,71 @@ const SelectorRow = memo(function SelectorRow({
   )
 })
 
+/* ====================== ПАПКА СЕЛЕКТОРОВ ====================== */
+/** Краткая сводка «что выбрано» по селекторам папки в одну строку. */
+function FolderSummary({ names }: { names: string[] }) {
+  const parts = useProxiesStore(
+    useShallow((s) =>
+      names.map((n) => {
+        const now = (s.proxies[n] as ProxyInfo | undefined)?.now
+        return `${n}: ${now && !isSmartPlaceholder(now) ? now : '—'}`
+      })
+    )
+  )
+  return <span className="text-muted-foreground min-w-0 truncate text-xs">{parts.join(' · ')}</span>
+}
+
+const SelectorFolderBlock = memo(function SelectorFolderBlock({
+  folder,
+  names,
+  renderRow,
+}: {
+  folder: SelectorFolder
+  names: string[]
+  renderRow: (name: string) => React.ReactNode
+}) {
+  const collapsed = useFolderCollapse((s) => !!s.collapsed[folder.id])
+  const toggle = useFolderCollapse((s) => s.toggle)
+  return (
+    <div className="border-border rounded-xl border">
+      <button
+        type="button"
+        className="hover:bg-accent/30 flex w-full cursor-pointer items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors"
+        onMouseDown={blurActiveElement}
+        onClick={() => toggle(folder.id)}
+        aria-expanded={!collapsed}
+      >
+        <FolderIcon icon={folder.icon || undefined} className="size-6" />
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <div className="flex items-center gap-2">
+            <span className="truncate text-[15px] font-medium">{folder.name}</span>
+            <Badge variant="secondary">{names.length}</Badge>
+          </div>
+          <FolderSummary names={names} />
+        </div>
+        {collapsed ? <IconChevronDown size={15} className="shrink-0" /> : <IconChevronUp size={15} className="shrink-0" />}
+      </button>
+      <div
+        className={cn(
+          'grid transition-[grid-template-rows,opacity] duration-200 ease-out',
+          collapsed ? 'grid-rows-[0fr] opacity-0' : 'grid-rows-[1fr] opacity-100'
+        )}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div className="flex flex-col gap-3 px-3 pb-3">{!collapsed && names.map((n) => renderRow(n))}</div>
+        </div>
+      </div>
+    </div>
+  )
+})
+
 /* ====================== ОСНОВНОЙ КОМПОНЕНТ ====================== */
 export function SelectorsPanel({ clashApiPort, mode, clashApiSecret, clashApiUnix, showHiddenSelectors, onCollapsedStateChange }: Props) {
   const loading = useProxiesStore((s) => s.loading)
   const error = useProxiesStore((s) => s.error)
   const pingTestUrl = useSettings((s) => s.pingTestUrl)
   const pingTestTimeout = useSettings((s) => s.pingTestTimeout)
+  const selectorFolders = useSettings((s) => s.selectorFolders)
   const [collapsedSelectors, setCollapsedSelectors] = useState<Record<string, boolean>>(() => readCollapsedSelectors())
 
   const pingTestQuery = useMemo(() => {
@@ -1155,22 +1233,33 @@ export function SelectorsPanel({ clashApiPort, mode, clashApiSecret, clashApiUni
     )
   }
 
+  const renderRow = (name: string) => (
+    <SelectorRow
+      key={name}
+      selectorName={name}
+      onTestAll={testAll}
+      onSelect={selectProxy}
+      onTestSingle={testSingle}
+      onClearFixed={clearFixedSelection}
+      onFlushSmart={flushSmartWeights}
+      collapsed={!!collapsedSelectors[name]}
+      onToggleCollapse={toggleCollapse}
+    />
+  )
+  const layout = mode === 'global' ? null : layoutSelectors(selectorNames, (n) => n, selectorFolders)
+
   return (
     <TooltipProvider delayDuration={500}>
       <div className="absolute inset-4 flex scrollbar-thin flex-col gap-4 overflow-y-auto">
-        {selectorNames.map((name) => (
-          <SelectorRow
-            key={name}
-            selectorName={name}
-            onTestAll={testAll}
-            onSelect={selectProxy}
-            onTestSingle={testSingle}
-            onClearFixed={clearFixedSelection}
-            onFlushSmart={flushSmartWeights}
-            collapsed={!!collapsedSelectors[name]}
-            onToggleCollapse={toggleCollapse}
-          />
-        ))}
+        {layout
+          ? layout.map((entry) =>
+              entry.kind === 'selector' ? (
+                renderRow(entry.item)
+              ) : (
+                <SelectorFolderBlock key={`folder:${entry.folder.id}`} folder={entry.folder} names={entry.items} renderRow={renderRow} />
+              )
+            )
+          : selectorNames.map(renderRow)}
       </div>
     </TooltipProvider>
   )

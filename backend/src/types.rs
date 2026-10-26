@@ -256,6 +256,27 @@ pub struct AutomationSettings {
     pub uptime: crate::uptime::UptimeSettings,
 }
 
+/// Папка селекторов — чисто визуальная группировка в панели, конфиг ядра не меняется.
+#[derive(Clone, Serialize, Deserialize, Default, Debug, PartialEq)]
+#[serde(default)]
+pub struct SelectorFolder {
+    pub id: String,
+    pub name: String,
+    /// URL иконки или пусто.
+    pub icon: String,
+    /// Имена групп (proxy-groups) mihomo в порядке отображения.
+    pub groups: Vec<String>,
+}
+
+/// Настройки интерфейса панели, общие для всех браузеров.
+#[derive(Clone, Serialize, Deserialize, Default)]
+#[serde(default)]
+pub struct UiSettings {
+    pub selector_folders: Vec<SelectorFolder>,
+}
+
+pub const SELECTOR_FOLDER_NAME_MAX: usize = 40;
+
 #[derive(Clone, Serialize, Default)]
 pub struct AppSettings {
     pub gui: GuiSettings,
@@ -266,6 +287,7 @@ pub struct AppSettings {
     pub auth: AuthSettings,
     pub plugins: PluginsSettings,
     pub automation: AutomationSettings,
+    pub ui: UiSettings,
 }
 
 impl<'de> Deserialize<'de> for AppSettings {
@@ -291,6 +313,8 @@ impl<'de> Deserialize<'de> for AppSettings {
             plugins: PluginsSettings,
             #[serde(default)]
             automation: AutomationSettings,
+            #[serde(default)]
+            ui: UiSettings,
             #[serde(rename = "timezoneOffset")]
             legacy_tz: Option<i32>,
         }
@@ -307,6 +331,7 @@ impl<'de> Deserialize<'de> for AppSettings {
             auth: raw.auth,
             plugins: raw.plugins,
             automation: raw.automation,
+            ui: raw.ui,
         })
     }
 }
@@ -360,6 +385,44 @@ impl AppSettings {
         Ok(())
     }
 
+    /// Папки селекторов: имя непустое и не длиннее `SELECTOR_FOLDER_NAME_MAX`, id уникальны,
+    /// группа лежит не более чем в одной папке. Пробелы по краям и пустые имена групп убираются.
+    pub fn validate_ui(&mut self) -> Result<(), String> {
+        let mut ids = std::collections::HashSet::new();
+        // группа → (id, имя) папки
+        let mut owner: std::collections::HashMap<String, (String, String)> = std::collections::HashMap::new();
+        for f in &mut self.ui.selector_folders {
+            f.id = f.id.trim().to_string();
+            f.name = f.name.trim().to_string();
+            f.icon = f.icon.trim().to_string();
+            let mut seen = std::collections::HashSet::new();
+            f.groups = f
+                .groups
+                .iter()
+                .map(|g| g.trim().to_string())
+                .filter(|g| !g.is_empty() && seen.insert(g.clone()))
+                .collect();
+            if f.name.is_empty() {
+                return Err("Имя папки не может быть пустым".into());
+            }
+            if f.name.chars().count() > SELECTOR_FOLDER_NAME_MAX {
+                return Err(format!("Имя папки «{}» длиннее {} символов", f.name, SELECTOR_FOLDER_NAME_MAX));
+            }
+            if f.id.is_empty() {
+                return Err(format!("У папки «{}» нет id", f.name));
+            }
+            if !ids.insert(f.id.clone()) {
+                return Err(format!("id папки «{}» повторяется", f.id));
+            }
+            for g in &f.groups {
+                if let Some((_, prev)) = owner.insert(g.clone(), (f.id.clone(), f.name.clone())) {
+                    return Err(format!("Селектор «{g}» уже лежит в папке «{prev}»"));
+                }
+            }
+        }
+        Ok(())
+    }
+
     pub fn validate_plugins(&self) -> Result<(), String> {
         for router in &self.plugins.routers {
             if router.host.trim().is_empty() {
@@ -389,4 +452,59 @@ pub struct UpdateReq {
     pub backup_core: bool,
     #[serde(default)]
     pub assets: Vec<String>,
+}
+
+#[cfg(test)]
+mod ui_settings_tests {
+    use super::*;
+
+    fn folder(id: &str, name: &str, groups: &[&str]) -> SelectorFolder {
+        SelectorFolder { id: id.into(), name: name.into(), icon: String::new(), groups: groups.iter().map(|g| g.to_string()).collect() }
+    }
+
+    #[test]
+    fn old_config_without_ui_deserializes() {
+        let s: AppSettings = serde_json::from_str(r#"{"gui":{"routing":true},"log":{"timezone":5}}"#).unwrap();
+        assert!(s.ui.selector_folders.is_empty());
+        assert_eq!(s.log.timezone, 5);
+    }
+
+    #[test]
+    fn ui_folders_roundtrip() {
+        let json = r#"{"ui":{"selector_folders":[{"id":"ai","name":"AI","icon":"https://x/ai.png","groups":["AI","ChatGPT","Claude","Gemini"]}]}}"#;
+        let s: AppSettings = serde_json::from_str(json).unwrap();
+        assert_eq!(s.ui.selector_folders, vec![SelectorFolder { icon: "https://x/ai.png".into(), ..folder("ai", "AI", &["AI", "ChatGPT", "Claude", "Gemini"]) }]);
+        let v = serde_json::to_value(&s.ui).unwrap();
+        assert_eq!(v["selector_folders"][0]["groups"][3], "Gemini");
+        // неполная запись папки — поля по умолчанию
+        let s2: AppSettings = serde_json::from_str(r#"{"ui":{"selector_folders":[{"id":"x","name":"X"}]}}"#).unwrap();
+        assert!(s2.ui.selector_folders[0].groups.is_empty() && s2.ui.selector_folders[0].icon.is_empty());
+    }
+
+    #[test]
+    fn validate_ui_rules() {
+        let mut s = AppSettings::default();
+        s.ui.selector_folders = vec![folder(" ai ", " AI ", &[" AI ", "ChatGPT", "ChatGPT", ""]), folder("media", "Медиа", &["YouTube"])];
+        assert!(s.validate_ui().is_ok());
+        assert_eq!(s.ui.selector_folders[0].id, "ai");
+        assert_eq!(s.ui.selector_folders[0].name, "AI");
+        assert_eq!(s.ui.selector_folders[0].groups, vec!["AI".to_string(), "ChatGPT".to_string()]);
+
+        s.ui.selector_folders = vec![folder("a", "   ", &[])];
+        assert!(s.validate_ui().unwrap_err().contains("пустым"));
+
+        s.ui.selector_folders = vec![folder("a", &"я".repeat(SELECTOR_FOLDER_NAME_MAX + 1), &[])];
+        assert!(s.validate_ui().is_err());
+        s.ui.selector_folders = vec![folder("a", &"я".repeat(SELECTOR_FOLDER_NAME_MAX), &[])];
+        assert!(s.validate_ui().is_ok());
+
+        s.ui.selector_folders = vec![folder("a", "A", &[]), folder("a", "B", &[])];
+        assert!(s.validate_ui().unwrap_err().contains("повторяется"));
+
+        s.ui.selector_folders = vec![folder("a", "A", &["AI"]), folder("b", "B", &["AI"])];
+        assert!(s.validate_ui().unwrap_err().contains("«AI»"));
+
+        s.ui.selector_folders = vec![folder("", "A", &[])];
+        assert!(s.validate_ui().is_err());
+    }
 }

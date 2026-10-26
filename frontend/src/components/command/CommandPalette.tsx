@@ -15,6 +15,7 @@ import { showToast, useAppActions, useAppContext, useCurrentCore, useSettings } 
 import { useUiPrefs } from '@/lib/uiPrefs'
 import { cn } from '@/lib/utils'
 import { openQuickRules } from '@/lib/quickRules'
+import { openSelectorFoldersModal } from '@/lib/selectorFolders'
 import {
   IconActivity,
   IconArrowsExchange,
@@ -25,6 +26,7 @@ import {
   IconCloudDownload,
   IconCpu,
   IconDevices,
+  IconFolder,
   IconFileDiff,
   IconGauge,
   IconSearch,
@@ -268,6 +270,16 @@ function useAppCommandProvider(openModal: (modal: string) => void) {
       disabled: currentCore !== 'mihomo',
       disabledReason: 'Каталог доступен только для Mihomo (в Xray списки берутся из geosite.dat)',
       run: () => openModal('showRuleCatalogModal'),
+    },
+    {
+      id: 'tools.selectorFolders',
+      title: 'Папки селекторов',
+      group: 'Утилиты',
+      keywords: ['folders', 'folder', 'папки', 'папка', 'селекторы', 'группировка'],
+      icon: IconFolder,
+      disabled: currentCore !== 'mihomo',
+      disabledReason: 'Папки селекторов доступны только для Mihomo',
+      run: () => openSelectorFoldersModal(),
     },
     {
       id: 'tools.proxyGroups',

@@ -5,7 +5,7 @@ use axum::response::{IntoResponse, Json};
 pub async fn get_settings(State(state): State<AppState>) -> impl IntoResponse {
     let s = state.settings.read().unwrap();
     Json(
-        serde_json::json!({ "success": true, "gui": s.gui, "updater": s.updater, "log": s.log, "clash_api": s.clash_api, "auth": { "enabled": s.auth.enabled }, "plugins": s.plugins, "automation": s.automation }),
+        serde_json::json!({ "success": true, "gui": s.gui, "updater": s.updater, "log": s.log, "clash_api": s.clash_api, "auth": { "enabled": s.auth.enabled }, "plugins": s.plugins, "automation": s.automation, "ui": s.ui }),
     )
 }
 
@@ -47,6 +47,9 @@ pub async fn patch_settings(State(state): State<AppState>, Json(patch): Json<ser
         return Json(serde_json::json!({"success": false, "error": e}));
     }
     if let Err(e) = settings.validate_automation() {
+        return Json(serde_json::json!({"success": false, "error": e}));
+    }
+    if let Err(e) = settings.validate_ui() {
         return Json(serde_json::json!({"success": false, "error": e}));
     }
     for (name, url) in [("Xray", &settings.updater.xray_repo), ("Mihomo", &settings.updater.mihomo_repo)] {
