@@ -81,6 +81,7 @@ const initialState: AppState = {
   showAdvisorModal: false,
   showQuickRulesModal: false,
   showProxyGroupsModal: false,
+  showRuleCatalogModal: false,
   updateModalCore: '',
   toasts: [],
   pendingSaveAction: null,
@@ -175,6 +176,7 @@ type CoreState = Omit<
   | 'showRouteTestModal'
   | 'showBackupsModal'
   | 'showProxyGroupsModal'
+  | 'showRuleCatalogModal'
   | 'showImportAmneziaModal'
   | 'showDevicesModal'
   | 'showPerfModal'
@@ -209,6 +211,7 @@ type ModalState = Pick<
   | 'showAdvisorModal'
   | 'showQuickRulesModal'
   | 'showProxyGroupsModal'
+  | 'showRuleCatalogModal'
   | 'updateModalCore'
   | 'pendingSaveAction'
 >
@@ -324,6 +327,7 @@ export function useModalContext() {
       showAdvisorModal: s.showAdvisorModal,
       showQuickRulesModal: s.showQuickRulesModal,
       showProxyGroupsModal: s.showProxyGroupsModal,
+      showRuleCatalogModal: s.showRuleCatalogModal,
       updateModalCore: s.updateModalCore,
       pendingSaveAction: s.pendingSaveAction,
     }))

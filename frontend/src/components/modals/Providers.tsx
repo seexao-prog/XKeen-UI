@@ -10,6 +10,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import {
+  IconBooks,
   IconDatabase,
   IconDeviceFloppy,
   IconEye,
@@ -28,6 +29,7 @@ import type { ProxyProvider, ProxySubscriptionInfo, RuleProvider } from '../../l
 import { cn, normalizeVehicleType } from '../../lib/utils'
 import { ProviderEditor } from '../configuration/editor/ProviderEditor'
 import { ReadOnlyYamlView } from '../configuration/editor/ReadOnlyYamlView'
+import { openRuleCatalog } from './RuleCatalog'
 
 export type ProvidersModalKind = 'rules' | 'proxies'
 
@@ -426,6 +428,19 @@ export function ProvidersModal({ open, kind, clashApiPort, clashApiSecret, clash
               <DialogTitle className="flex items-center gap-2 pr-8 pb-3">
                 <KindIcon size={22} className="text-chart-2" />
                 {kind === 'proxies' ? 'Провайдеры прокси' : 'Провайдеры правил'}
+                {kind === 'rules' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="ml-auto"
+                    onClick={() => {
+                      onOpenChange(false)
+                      openRuleCatalog()
+                    }}
+                  >
+                    <IconBooks data-icon="inline-start" /> Добавить из каталога
+                  </Button>
+                )}
               </DialogTitle>
             </DialogHeader>
 

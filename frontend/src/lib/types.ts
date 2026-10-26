@@ -159,6 +159,7 @@ export interface AppState {
   showAdvisorModal: boolean
   showQuickRulesModal: boolean
   showProxyGroupsModal: boolean
+  showRuleCatalogModal: boolean
   updateModalCore: string
   toasts: ToastMessage[]
   pendingSaveAction: (() => void) | null
@@ -202,6 +203,7 @@ export type AppAction =
         | 'showAdvisorModal'
         | 'showQuickRulesModal'
         | 'showProxyGroupsModal'
+        | 'showRuleCatalogModal'
       >
       show: boolean
     }

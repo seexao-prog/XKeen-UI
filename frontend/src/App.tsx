@@ -14,6 +14,7 @@ import { GeoScanModal } from './components/modals/GeoScan'
 import { ImportAmneziaModal } from './components/modals/ImportAmnezia'
 import { PerformanceModal } from './components/modals/Performance'
 import { ProxyGroupsModal } from './components/modals/ProxyGroups'
+import { RuleCatalogModal } from './components/modals/RuleCatalog'
 import { QuickRulesModal } from './components/modals/QuickRules'
 import { RouteTesterModal } from './components/modals/RouteTester'
 import { SettingsModal } from './components/modals/Settings'
@@ -102,6 +103,7 @@ const ModalManager = memo(function ModalManager({
   const mountAdvisor = useLazyMount(modals.showAdvisorModal)
   const mountQuickRules = useLazyMount(modals.showQuickRulesModal)
   const mountProxyGroups = useLazyMount(modals.showProxyGroupsModal)
+  const mountRuleCatalog = useLazyMount(modals.showRuleCatalogModal)
 
   return (
     <>
@@ -128,6 +130,7 @@ const ModalManager = memo(function ModalManager({
       {mountAdvisor && <ConfigAdvisorModal />}
       {mountQuickRules && <QuickRulesModal />}
       {mountProxyGroups && <ProxyGroupsModal onApplied={onConfigsChanged} />}
+      {mountRuleCatalog && <RuleCatalogModal />}
     </>
   )
 })

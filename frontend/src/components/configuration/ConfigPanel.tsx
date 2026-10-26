@@ -41,6 +41,7 @@ import {
   IconRoute,
   IconRss,
   IconArrowsSplit2,
+  IconBooks,
   IconSearch,
   IconStack2,
   IconTrash,
@@ -65,6 +66,7 @@ import { cn } from '../../lib/utils'
 import { parse as parseJsonc } from 'jsonc-parser'
 import { MassConfirmDialog } from '../log/multi-routers/MassConfirmDialog'
 import { openQuickRules } from '../../lib/quickRules'
+import { openRuleCatalog } from '../modals/RuleCatalog'
 import { BackupsModal } from '../modals/Backups'
 import { ProvidersModal } from '../modals/Providers'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from '../ui/context-menu'
@@ -983,6 +985,10 @@ export function ConfigPanel({
                 <Button variant="outline" className="text-[13px]" onClick={() => openProvidersModal('rules')}>
                   <IconListDetails data-icon="inline-start" />
                   Рулсеты
+                </Button>
+                <Button variant="outline" className="text-[13px]" onClick={() => openRuleCatalog()}>
+                  <IconBooks data-icon="inline-start" />
+                  Каталог
                 </Button>
                 <Tooltip>
                   <TooltipTrigger
