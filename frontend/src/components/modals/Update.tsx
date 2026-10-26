@@ -21,7 +21,7 @@ const FETCH_TIMEOUT_MS = 5000
 const CORE_REPOS = {
   xray: 'XTLS/Xray-core',
   mihomo: 'MetaCubeX/mihomo',
-  self: 'zxc-rv/XKeen-UI',
+  self: 'seexao-prog/XKeen-UI',
 } as const
 
 const mdClass = `

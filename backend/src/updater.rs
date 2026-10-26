@@ -19,6 +19,9 @@ use tokio::process::Command;
 const GITHUB_API: &str = "https://api.github.com/repos";
 const GITHUB_RELEASE: &str = "https://github.com";
 
+/// Репозиторий, из которого панель обновляет сама себя (форк с темой Vercel).
+pub const SELF_REPO: &str = "seexao-prog/XKeen-UI";
+
 #[derive(Deserialize)]
 struct GhAsset {
     name: String,
@@ -65,7 +68,7 @@ pub fn get_repo(updater: &UpdaterSettings, core: &str) -> Option<String> {
     let (url, fallback) = match core {
         "xray" => (&updater.xray_repo, "XTLS/Xray-core"),
         "mihomo" => (&updater.mihomo_repo, "MetaCubeX/mihomo"),
-        "self" => return Some("zxc-rv/XKeen-UI".into()),
+        "self" => return Some(SELF_REPO.into()),
         _ => return None,
     };
     Some(if valid_repo_url(url) {
@@ -702,7 +705,7 @@ mod tests {
         let mut s = UpdaterSettings::default();
         assert_eq!(get_repo(&s, "xray").as_deref(), Some("XTLS/Xray-core"));
         assert_eq!(get_repo(&s, "mihomo").as_deref(), Some("MetaCubeX/mihomo"));
-        assert_eq!(get_repo(&s, "self").as_deref(), Some("zxc-rv/XKeen-UI"));
+        assert_eq!(get_repo(&s, "self").as_deref(), Some(SELF_REPO));
 
         s.xray_repo = "https://github.com/someone/xray-fork".into();
         assert_eq!(get_repo(&s, "xray").as_deref(), Some("someone/xray-fork"));

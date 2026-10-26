@@ -330,7 +330,7 @@ export function StatusBar({
           {/* Логотип */}
           <div className="order-1 flex items-center justify-center md:absolute md:left-1/2 md:order-2 md:-translate-x-1/2">
             <a
-              href="https://github.com/zxc-rv/XKeen-UI"
+              href="https://github.com/seexao-prog/XKeen-UI"
               target="_blank"
               rel="noreferrer"
               className="rounded-md transition-opacity hover:opacity-85"
