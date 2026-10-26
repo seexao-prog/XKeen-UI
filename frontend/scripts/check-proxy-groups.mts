@@ -1,10 +1,10 @@
 // Ручная проверка applyMihomoPlan на реальном config.yaml:
-//   node src/lib/proxyGroups.check.mts <path/to/config.yaml>
+//   node scripts/check-proxy-groups.mts <path/to/config.yaml>
 // Добавляет тестовую эксклюзивную группу из первых прокси и проверяет, что YAML остаётся валидным,
 // а вне proxy-groups ничего не меняется. Файл не входит в сборку (не импортируется приложением).
 import { readFileSync } from 'node:fs'
 import { parseDocument } from 'yaml'
-import { applyMihomoPlan, type MihomoPlan } from './proxyGroups.ts'
+import { applyMihomoPlan, type MihomoPlan } from '../src/lib/proxyGroups.ts'
 
 const text = readFileSync(process.argv[2], 'utf8')
 const js = parseDocument(text).toJS() as { proxies?: { name: string }[]; 'proxy-groups'?: { name: string }[] }
