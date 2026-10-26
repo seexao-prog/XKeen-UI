@@ -13,6 +13,7 @@ import {
   IconArrowLeft,
   IconBolt,
   IconChevronDown,
+  IconLink,
   IconPencil,
   IconPlus,
   IconSearch,
@@ -21,7 +22,7 @@ import {
   IconStarFilled,
   IconTrash,
 } from '@tabler/icons-react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { apiCall } from '../../lib/api'
 import {
   applyMihomoPlan,
@@ -117,6 +118,7 @@ export function ProxyGroupsModal({ onApplied }: { onApplied?: () => void }) {
   /** «Сразу выбрать»: тег группы → селекторы, в которых её нужно выбрать после применения. */
   const [selectAfterApply, setSelectAfterApply] = useState<Record<string, string[]>>({})
   const [selectNow, setSelectNow] = useState(true)
+  const [focusAttach, setFocusAttach] = useState(false)
 
   const core = data?.core ?? 'xray'
   const proxies = useProxiesStore((s) => s.proxies)
@@ -190,10 +192,11 @@ export function ProxyGroupsModal({ onApplied }: { onApplied?: () => void }) {
   )
 
   // ─── редактирование ───────────────────────────────────────────────────────────────────
-  function startEdit(index: number) {
+  function startEdit(index: number, focusAttach = false) {
     setEditIndex(index)
     setDraft(index >= 0 ? structuredClone(groups[index]) : emptyGroup(core))
     setSelectNow(true)
+    setFocusAttach(focusAttach)
     setView('edit')
   }
 
@@ -436,6 +439,7 @@ export function ProxyGroupsModal({ onApplied }: { onApplied?: () => void }) {
               setObserver={setObserver}
               inventory={data.inventory}
               onEdit={startEdit}
+              onAttach={(i) => startEdit(i, true)}
               onDelete={removeGroup}
               onToggle={toggleEnabled}
               onApplyObserver={() => void review(groups)}
@@ -456,6 +460,7 @@ export function ProxyGroupsModal({ onApplied }: { onApplied?: () => void }) {
               }
               selectNow={selectNow}
               setSelectNow={setSelectNow}
+              focusAttach={focusAttach}
             />
           ) : (
             <ReviewView
@@ -512,6 +517,7 @@ function ListView(props: {
   setObserver: (o: Observer) => void
   inventory: XrayInventory | MihomoInventory
   onEdit: (i: number) => void
+  onAttach: (i: number) => void
   onDelete: (i: number) => void
   onToggle: (i: number, on: boolean) => void
   onApplyObserver: () => void
@@ -543,15 +549,24 @@ function ListView(props: {
                     {g.exclusive && <Badge variant="outline">эксклюзивная</Badge>}
                     {used && <Badge variant="sky">в правилах</Badge>}
                   </div>
-                  {core === 'mihomo' && !!g.attach_to?.length && (
+                  {core === 'mihomo' && (
                     <div className="mt-1.5 flex flex-wrap items-center gap-1">
-                      <span className="text-muted-foreground text-xs">в селекторах:</span>
-                      {g.attach_to.map((s) => (
-                        <Badge key={s} variant="secondary">
-                          {s}
-                          {g.attach_first ? ' ★' : ''}
-                        </Badge>
-                      ))}
+                      {g.attach_to?.length ? (
+                        <>
+                          <span className="text-muted-foreground text-xs">вариант в селекторах:</span>
+                          {g.attach_to.map((s) => (
+                            <Badge key={s} variant="secondary">
+                              {s}
+                              {g.attach_first ? ' ★' : ''}
+                            </Badge>
+                          ))}
+                        </>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">пока отдельный селектор, ни к чему не привязана</span>
+                      )}
+                      <Button variant="outline" size="xs" className="ml-1" onClick={() => props.onAttach(i)} disabled={busy}>
+                        <IconLink /> {g.attach_to?.length ? 'Изменить' : 'Привязать к селектору'}
+                      </Button>
                     </div>
                   )}
                   <div className="text-muted-foreground mt-1 truncate text-xs">
@@ -583,7 +598,14 @@ function ListView(props: {
         })}
 
         <div className="text-muted-foreground mt-2 rounded-lg border border-dashed p-3 text-xs leading-relaxed">
-          Чтобы направить домены в группу, выберите её тег как цель в «Маршрутизации доменов» или в правилах:{' '}
+          {core === 'mihomo' && (
+            <>
+              Чтобы выбирать группу внутри своего селектора (например, в «AI» вместо «Заблок. сервисы»), нажмите «Привязать к селектору».
+              Привязанная группа перестаёт показываться отдельной карточкой. Или направьте домены прямо в группу — в «Маршрутизации доменов»
+              или в правилах:{' '}
+            </>
+          )}
+          {core === 'xray' && <>Чтобы направить домены в группу, выберите её тег как цель в «Маршрутизации доменов» или в правилах: </>}
           {core === 'xray' ? (
             <code className="font-mono">"balancerTag": "grp-…"</code>
           ) : (
@@ -681,8 +703,14 @@ function EditView(props: {
   selectors: MihomoInventory['groups']
   selectNow: boolean
   setSelectNow: (v: boolean) => void
+  focusAttach?: boolean
 }) {
   const { draft, setDraft, core, candidates } = props
+  const attachRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (props.focusAttach) attachRef.current?.scrollIntoView({ block: 'start' })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const [query, setQuery] = useState('')
   const [selQuery, setSelQuery] = useState('')
   const [showAllTypes, setShowAllTypes] = useState(false)
@@ -825,7 +853,7 @@ function EditView(props: {
         </div>
 
         {core === 'mihomo' && (
-          <div className="flex flex-col gap-2">
+          <div ref={attachRef} className="flex scroll-mt-2 flex-col gap-2">
             <div className="flex items-center justify-between gap-2">
               <Label className="text-sm">
                 Показывать в селекторах <span className="text-muted-foreground">({attached.size})</span>
@@ -841,8 +869,9 @@ function EditView(props: {
               )}
             </div>
             <p className="text-muted-foreground text-xs leading-relaxed">
-              Группа появится вариантом выбора в отмеченных селекторах — например, в «YouTube» можно будет выбрать эту группу вместо
-              одиночного сервера. Панель допишет её в <code className="font-mono">proxies</code> селектора и уберёт, если снять отметку.
+              Группа появится вариантом выбора в отмеченных селекторах — например, в «AI» можно будет выбрать её вместо «Заблок. сервисы».
+              Панель допишет её в <code className="font-mono">proxies</code> селектора, а саму группу скроет из списка селекторов (
+              <code className="font-mono">hidden: true</code>), чтобы она не висела отдельной карточкой. Снимите отметку — всё вернётся.
             </p>
             {props.selectors.length > 6 && (
               <div className="relative">

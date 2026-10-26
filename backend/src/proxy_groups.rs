@@ -497,6 +497,11 @@ pub fn mihomo_group(g: &ProxyGroup, smart_supported: bool, ping_url: &str) -> Va
         let s = g.settings.lb_strategy.clone().unwrap_or_else(|| "consistent-hashing".into());
         o.insert("strategy".into(), json!(s));
     }
+    // Привязанная группа — это вариант внутри селектора, а не отдельный селектор: скрываем её из списка
+    // групп (в панели и в дашбордах Clash API), но в селекторах она видна и выбирается.
+    if !g.attach_to.is_empty() {
+        o.insert("hidden".into(), json!(true));
+    }
     Value::Object(o)
 }
 
@@ -1490,6 +1495,15 @@ mod tests {
         assert!(!valid_tag("grp yt"));
         assert!(!valid_tag(""));
         assert!(!valid_member_name("a\nb"));
+    }
+
+    #[test]
+    fn attached_mihomo_group_is_hidden() {
+        let mut grp = g("grp-usa", &["us1"]);
+        grp.core = "mihomo".into();
+        assert!(mihomo_group(&grp, false, "u").get("hidden").is_none());
+        grp.attach_to = vec!["AI".into()];
+        assert_eq!(mihomo_group(&grp, false, "u")["hidden"], true);
     }
 
     #[test]
